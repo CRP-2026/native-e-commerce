@@ -1,0 +1,366 @@
+# First Project - React Native với Expo Router
+
+Dự án React Native sử dụng Expo SDK 54, Expo Router v6, và NativeWind (Tailwind CSS) với cấu trúc Domain-Driven Design.
+
+## 📋 Mục Lục
+
+- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
+- [Cài Đặt](#cài-đặt)
+- [Chạy Dự Án](#chạy-dự-án)
+- [Cấu Trúc Dự Án](#cấu-trúc-dự-án)
+- [Công Nghệ Sử Dụng](#công-nghệ-sử-dụng)
+- [Phát Triển](#phát-triển)
+- [Tài Liệu Tham Khảo](#tài-liệu-tham-khảo)
+
+---
+
+## 🖥️ Yêu Cầu Hệ Thống
+
+- **Node.js**: >= 18.x (khuyến nghị 20.x)
+- **npm**: >= 9.x hoặc **yarn**: >= 1.22.x
+- **Git**: Để quản lý version control
+- **Expo CLI**: Cài đặt global (optional) hoặc sử dụng `npx expo`
+
+### Development Tools (Tùy chọn)
+
+- **Android Studio**: Cho Android development
+- **Xcode**: Cho iOS development (chỉ trên macOS)
+- **VS Code**: Editor được khuyến nghị
+
+---
+
+## 🚀 Cài Đặt
+
+### Bước 1: Clone hoặc tải dự án
+
+```bash
+git clone <repository-url>
+cd firtProject
+```
+
+### Bước 2: Cài đặt dependencies
+
+Sử dụng npm:
+```bash
+npm install
+```
+
+Hoặc sử dụng yarn:
+```bash
+yarn install
+```
+
+### Bước 3: Fix và kiểm tra dependencies
+
+Chạy lệnh sau để tự động fix các version conflicts và đảm bảo tất cả dependencies tương thích với Expo SDK 54:
+
+```bash
+npx expo install --fix
+```
+
+Sau đó kiểm tra lại với:
+
+```bash
+npx expo-doctor
+```
+
+Tất cả checks nên pass (17/17) ✅.
+
+### Bước 4: Cấu hình đã sẵn sàng
+
+Các file cấu hình đã được setup sẵn:
+- ✅ `babel.config.js` - Cấu hình Babel với NativeWind
+- ✅ `metro.config.js` - Cấu hình Metro bundler
+- ✅ `tailwind.config.js` - Cấu hình Tailwind CSS
+- ✅ `tsconfig.json` - Cấu hình TypeScript
+- ✅ `global.css` - Tailwind CSS global styles
+- ✅ `nativewind-env.d.ts` - TypeScript types cho NativeWind
+
+---
+
+## ▶️ Chạy Dự Án
+
+### Khởi động Development Server
+
+```bash
+npm start
+```
+
+Hoặc với yarn:
+```bash
+yarn start
+```
+
+Lệnh này sẽ mở Expo Dev Tools trong terminal. Bạn có thể:
+- Nhấn `a` để mở trên Android emulator
+- Nhấn `i` để mở trên iOS simulator (macOS only)
+- Nhấn `w` để mở trên web browser
+- Quét QR code bằng Expo Go app trên điện thoại
+
+### Chạy trên Platform Cụ Thể
+
+#### Android
+```bash
+npm run android
+# hoặc
+npx expo start --android
+```
+
+#### iOS (macOS only)
+```bash
+npm run ios
+# hoặc
+npx expo start --ios
+```
+
+#### Web
+```bash
+npm run web
+# hoặc
+npx expo start --web
+```
+
+### Các Lệnh Khác
+
+```bash
+# Lint code
+npm run lint
+
+# Reset project (xóa app directory)
+npm run reset-project
+```
+
+### Restart với Cache Reset
+
+Nếu gặp vấn đề, restart Metro với cache reset:
+
+```bash
+npm start -- --reset-cache
+```
+
+---
+
+## 📁 Cấu Trúc Dự Án
+
+Dự án sử dụng **Domain-Driven Design (DDD)** để tổ chức code:
+
+```
+firtProject/
+├── app/                          # Routing layer (Expo Router)
+│   ├── _layout.tsx              # Root layout
+│   ├── (tabs)/                  # Tab navigation
+│   │   ├── _layout.tsx
+│   │   ├── index.tsx
+│   │   └── explore.tsx
+│   └── [route].tsx              # Route files (export screens)
+│
+├── src/                          # Source code
+│   ├── features/                 # Business domains
+│   │   ├── auth/
+│   │   │   └── screens/         # Auth screens
+│   │   ├── catalog/
+│   │   │   └── screens/         # Catalog screens
+│   │   ├── cart/
+│   │   │   └── screens/         # Cart screens
+│   │   └── [domain]/            # Other domains
+│   │       ├── screens/         # Screen components
+│   │       ├── components/      # Domain-specific components
+│   │       ├── hooks/           # Custom hooks
+│   │       ├── services/        # API calls, business logic
+│   │       └── types/          # TypeScript types
+│   │
+│   ├── components/               # Shared/reusable components
+│   │   ├── themed-text.tsx
+│   │   ├── themed-view.tsx
+│   │   └── ui/                  # UI components
+│   │
+│   ├── lib/                      # Shared utilities
+│   │   ├── hooks/               # Shared hooks
+│   │   │   ├── use-color-scheme.ts
+│   │   │   └── use-theme-color.ts
+│   │   └── constants/           # Constants
+│   │       └── theme.ts
+│   │
+│   └── assets/                   # Assets
+│       └── images/              # Image files
+│
+├── global.css                    # Tailwind CSS global styles
+├── tailwind.config.js            # Tailwind configuration
+├── babel.config.js               # Babel configuration
+├── metro.config.js               # Metro bundler configuration
+├── tsconfig.json                 # TypeScript configuration
+├── app.json                      # Expo configuration
+├── package.json                  # Dependencies
+└── README.md                     # This file
+```
+
+### Quy Tắc Tổ Chức
+
+- **`app/`**: Chỉ chứa routing files - không viết component code ở đây
+- **`src/features/`**: Nhóm code theo business domain (auth, catalog, cart, etc.)
+- **`src/components/`**: Components dùng chung cho nhiều features
+- **`src/lib/`**: Utilities, hooks, constants dùng chung
+
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+### Core
+- **Expo SDK 54** - Framework chính
+- **React 19.1.0** - UI library
+- **React Native 0.81.5** - Mobile framework
+- **TypeScript 5.9.2** - Type safety
+
+### Navigation
+- **Expo Router v6** - File-based routing (thay thế @react-navigation)
+
+### Styling
+- **NativeWind v4.2.1** - Tailwind CSS cho React Native
+- **Tailwind CSS v3.4.19** - Utility-first CSS framework
+
+### Animations
+- **react-native-reanimated ~4.1.1** - Animations với worklets
+- **react-native-gesture-handler ~2.28.0** - Gesture handling
+- **react-native-worklets 0.5.1** - Worklets support
+
+### UI & Icons
+- **@expo/vector-icons ^15.0.3** - Icon library
+- **expo-image ~3.0.11** - Optimized image component
+
+### Development Tools
+- **ESLint** - Code linting
+- **TypeScript** - Type checking
+
+---
+
+## 💻 Phát Triển
+
+### Tạo Màn Hình Mới
+
+Xem file `HUONG_DAN_TAO_MAN_HINH.md` để biết hướng dẫn chi tiết.
+   ```tsx
+   // app/(tabs)/_layout.tsx
+   <Tabs.Screen
+     name="cart"
+     options={{
+       title: 'Cart',
+       tabBarIcon: ({ color }) => <IconSymbol name="cart.fill" color={color} />,
+     }}
+   />
+   ```
+
+### Styling với NativeWind
+
+Ưu tiên sử dụng NativeWind (Tailwind CSS) thay vì StyleSheet:
+
+```tsx
+// ✅ Tốt - Sử dụng NativeWind
+<View className="flex-1 p-4 bg-white rounded-lg">
+  <Text className="text-xl font-bold text-blue-600">Hello</Text>
+</View>
+
+// ❌ Tránh - Chỉ dùng khi cần thiết
+const styles = StyleSheet.create({ ... });
+<View style={styles.container}>
+```
+
+### Path Aliases
+
+Sử dụng path aliases để import dễ dàng:
+
+```tsx
+import { ThemedText } from '@/components/themed-text';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import CartScreen from '@/features/cart/screens/CartScreen';
+import { Colors } from '@/constants/theme';
+```
+
+### TypeScript
+
+Luôn định nghĩa types cho route params:
+
+```tsx
+import { useLocalSearchParams } from 'expo-router';
+
+export default function ProductDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  // ...
+}
+```
+
+---
+
+## 📚 Tài Liệu Tham Khảo
+
+### Expo
+- [Expo Documentation](https://docs.expo.dev/)
+- [Expo Router](https://docs.expo.dev/router/introduction/)
+- [Expo SDK 54](https://docs.expo.dev/versions/v54.0.0/)
+
+### React Native
+- [React Native Documentation](https://reactnative.dev/)
+- [React Native Reanimated](https://docs.swmansion.com/react-native-reanimated/)
+
+### Styling
+- [NativeWind Documentation](https://www.nativewind.dev/)
+- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
+
+### TypeScript
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+
+---
+
+## 🐛 Troubleshooting
+
+### Lỗi: "Cannot find module"
+```bash
+# Xóa node_modules và cài lại
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Lỗi: "Metro bundler cache"
+```bash
+npm start -- --reset-cache
+```
+
+### Lỗi: "Dependencies version conflicts"
+```bash
+npx expo install --fix
+```
+
+### Lỗi: "NativeWind styles not working"
+- Đảm bảo `global.css` đã được import trong `app/_layout.tsx`
+- Restart Metro với `--reset-cache`
+
+---
+
+## 📝 Scripts
+
+| Script | Mô tả |
+|--------|-------|
+| `npm start` | Khởi động Expo dev server |
+| `npm run android` | Chạy trên Android |
+| `npm run ios` | Chạy trên iOS (macOS only) |
+| `npm run web` | Chạy trên web browser |
+| `npm run lint` | Kiểm tra code với ESLint |
+| `npm run reset-project` | Reset project về trạng thái ban đầu |
+
+---
+
+## ✅ Checklist Sau Khi Clone
+
+- [ ] Đã cài đặt Node.js >= 18.x
+- [ ] Đã chạy `npm install` hoặc `yarn install`
+- [ ] Đã chạy `npx expo-doctor` và tất cả checks pass
+- [ ] Đã chạy `npm start` thành công
+- [ ] App chạy được trên ít nhất 1 platform (Android/iOS/Web)
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
