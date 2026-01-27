@@ -23,10 +23,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="order"
         options={{
-          title: 'Orders',
-          tabBarIcon: ({ color }) => <TabBarIcon name="receipt" color={color} />,
+          title: 'Order',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list-alt" color={color} />,
         }}
       />
       <Tabs.Screen
@@ -41,6 +41,13 @@ export default function TabLayout() {
         options={{
           title: 'Account',
           tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
         }}
       />
     </Tabs>
