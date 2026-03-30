@@ -1,137 +1,84 @@
-// features/auth/screens/LoginScreen.tsx
-import { StyleSheet, View, Text, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleLogin = () => {
     console.log('Login:', { email, password });
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Sign in to your account</Text>
-      </View>
+    <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
+      <View className="px-8 pb-8 pt-[63px]">
+        <Text className="mb-10 text-[50px] font-bold leading-[58px] text-black">Welcome{'\n'}Back!</Text>
 
-      <View style={styles.form}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            placeholderTextColor="#999"
-          />
+        <View className="gap-8">
+          <View className="h-[55px] flex-row items-center rounded-[10px] border border-[#A8A8A9] bg-[#F3F3F3] px-3">
+            <FontAwesome name="user" size={18} color="#676767" style={{ marginRight: 10, width: 20, textAlign: 'center' }} />
+            <TextInput
+              className="flex-1 text-xs font-medium text-[#676767]"
+              placeholder="Username or Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              placeholderTextColor="#676767"
+            />
+          </View>
+
+          <View>
+            <View className="h-[55px] flex-row items-center rounded-[10px] border border-[#A8A8A9] bg-[#F3F3F3] px-3">
+              <FontAwesome5 name="lock" size={16} color="#676767" style={{ marginRight: 10, width: 20, textAlign: 'center' }} />
+              <TextInput
+                className="flex-1 text-xs font-medium text-[#676767]"
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                placeholderTextColor="#676767"
+              />
+              <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+                <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color="#676767" />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity className="mt-2 items-end">
+              <Text className="text-xs text-[#F83758]">Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
-          />
+        <TouchableOpacity className="mt-9 h-[55px] items-center justify-center rounded bg-[#F83758]" onPress={handleLogin}>
+          <Text className="text-[20px] font-semibold text-white">Login</Text>
+        </TouchableOpacity>
+
+        <View className="mt-[75px] items-center">
+          <Text className="mb-5 text-xs font-medium text-[#575757]">- OR Continue with -</Text>
+          <View className="flex-row gap-[10px]">
+            <TouchableOpacity className="h-[54px] w-[54px] items-center justify-center rounded-full border border-[#F83758] bg-[#FCF3F6]">
+              <FontAwesome name="google" size={24} color="#DB4437" />
+            </TouchableOpacity>
+            <TouchableOpacity className="h-[54px] w-[54px] items-center justify-center rounded-full border border-[#F83758] bg-[#FCF3F6]">
+              <FontAwesome name="apple" size={24} color="#000000" />
+            </TouchableOpacity>
+            <TouchableOpacity className="h-[54px] w-[54px] items-center justify-center rounded-full border border-[#F83758] bg-[#FCF3F6]">
+              <FontAwesome name="facebook" size={24} color="#3b5998" />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <TouchableOpacity style={styles.forgotButton}>
-          <Text style={styles.forgotText}>Forgot Password?</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Sign In</Text>
-        </TouchableOpacity>
+        <View className="mt-12 flex-row items-center justify-center">
+          
+          <Text className="text-[24px] text-[#575757]">Create An Account </Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/signup')}>
+            <Text className="text-[24px] font-semibold text-[#F83758] underline">Sign Up</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Don't have an account? </Text>
-        <TouchableOpacity>
-          <Text style={styles.signupLink}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingTop: 60,
-  },
-  header: {
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-  },
-  form: {
-    marginBottom: 40,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  forgotButton: {
-    alignItems: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotText: {
-    color: '#007AFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  loginButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  loginButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#666',
-    fontSize: 14,
-  },
-  signupLink: {
-    color: '#007AFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
