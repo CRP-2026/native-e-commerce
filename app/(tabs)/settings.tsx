@@ -21,6 +21,11 @@ export default function Settings() {
             onPress={() => router.push('/(auth)/signup')}>
             <Text className="text-base font-semibold text-[#007AFF]">Test Signup Screen</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center rounded-lg border border-[#007AFF] py-3"
+            onPress={() => router.push('/(auth)/forgot')}>
+            <Text className="text-base font-semibold text-[#007AFF]">Test Forgot Screen</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </>
