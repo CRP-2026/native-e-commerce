@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Platform } from 'react-native';
+import { getOnboardingSeen } from '~/lib/onboardingStorage';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -11,13 +12,19 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
+  const [isBootstrapped, setIsBootstrapped] = useState(false);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
+
   useEffect(() => {
     async function prepare() {
       try {
+        const onboardingSeen = await getOnboardingSeen();
+        setHasSeenOnboarding(onboardingSeen);
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (e) {
         console.warn('Error preparing app:', e);
       } finally {
+        setIsBootstrapped(true);
         if (Platform.OS !== 'web') {
           try {
             await SplashScreen.hideAsync();
@@ -31,8 +38,11 @@ export default function RootLayout() {
     prepare();
   }, []);
 
+  if (!isBootstrapped) return null;
+
   return (
-    <Stack>
+    <Stack initialRouteName={hasSeenOnboarding ? '(tabs)' : 'onboarding'}>
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="modal" options={{ presentation: 'modal' }} />

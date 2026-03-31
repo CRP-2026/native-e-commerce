@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "my-app",
-    "slug": "my-app",
+    "name": "Jewelry Store",
+    "slug": "jewelry-store",
     "version": "1.0.0",
-    "scheme": "my-app",
+    "scheme": "jewelry-store",
     "platforms": [
       "ios",
       "android",

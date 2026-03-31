@@ -1,8 +1,13 @@
 import { Stack } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { resetOnboardingSeen } from '~/lib/onboardingStorage';
 export default function Settings() {
   const router = useRouter();
+  const handleResetOnboarding = async () => {
+    await resetOnboardingSeen();
+    Alert.alert('Done', 'Onboarding has been reset. Reopen app to see it again.');
+  };
 
   return (
     <>
@@ -25,6 +30,9 @@ export default function Settings() {
             className="items-center rounded-lg border border-[#007AFF] py-3"
             onPress={() => router.push('/(auth)/forgot')}>
             <Text className="text-base font-semibold text-[#007AFF]">Test Forgot Screen</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="items-center rounded-lg border border-[#F83758] py-3" onPress={handleResetOnboarding}>
+            <Text className="text-base font-semibold text-[#F83758]">Reset Onboarding</Text>
           </TouchableOpacity>
         </View>
       </View>
