@@ -1,23 +1,8 @@
-import { Product as IProduct } from "@/lib/types/models";
-export type HomeCategory = {
-  id: string;
-  label: string;
-  image: string;
-};
+import { Product as IProduct, Category as ICategory } from "@/lib/types/models";
 
-export type HomeProduct = {
-  id: string;
-  title: string;
-  subtitle: string;
-  image: string;
-  price: string;
-  oldPrice: string;
-  discount: string;
-  rating: number;
-  reviews: number;
-};
 
-export const homeCategories: HomeCategory[] = [
+
+export const homeCategories: ICategory[] = [
   {
     id: 'beauty',
     label: 'Beauty',
@@ -50,7 +35,7 @@ export const homeCategories: HomeCategory[] = [
   },
 ];
 
-export const homeProducts: HomeProduct[] = [
+export const homeProducts: IProduct[] = [
   {
     id: '1',
     title: 'Women Printed Kurta',
