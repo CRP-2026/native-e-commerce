@@ -130,7 +130,7 @@ my-app/
 │   │
 │   ├── (tabs)/                      # Tab navigation group
 │   │   ├── _layout.tsx              # Tab layout (4 tabs)
-│   │   ├── index.tsx                # Shop/Home (products)
+│   │   ├── index.tsx                # Home (tab Shop): featured, search, promo, products
 │   │   ├── two.tsx                  # Orders history
 │   │   ├── cart.tsx                 # Shopping cart
 │   │   └── account.tsx              # User account
@@ -277,10 +277,10 @@ my-app/
 
 ### Tab Navigation (4 Tabs)
 
-1. **🏪 Shop** (`index.tsx`)
-   - Hiển thị danh sách sản phẩm
-   - Tìm kiếm & lọc sản phẩm
-   - Chi tiết sản phẩm
+1. **🏪 Shop / Home** (`(tabs)/index.tsx`)
+   - Màn **Home**: All Featured (Sort / Filter), thanh tìm kiếm, danh mục ngang, banner khuyến mãi, Deal of the Day, sản phẩm ngang, Special Offers, Sponsored
+   - Dữ liệu hiện là mock để demo UI; có thể nối store/API sau
+   - Điều hướng chi tiết sản phẩm: `app/product/[id].tsx` (khi đã gắn navigation từ card)
 
 2. **📦 Orders** (`two.tsx`)
    - Lịch sử đơn hàng
@@ -303,6 +303,19 @@ my-app/
 
 - **Login** (`(auth)/login.tsx`) - Đăng nhập
 - **Sign Up** (`(auth)/signup.tsx`) - Đăng ký
+
+---
+
+## 📝 Cập nhật gần đây
+
+### Màn Home (tab đầu tiên — Shop)
+
+| Mục | Chi tiết |
+|-----|----------|
+| **File** | `app/(tabs)/index.tsx` — component `HomeScreen`, `Stack.Screen` title **Home** |
+| **Thiết kế tham chiếu** | Figma — *eCommerce App UI Kit* (Community), frame **Home page** (`node-id=1-17021`). Một số block (ví dụ search bar, header All Featured + Sort/Filter) lấy qua **Figma MCP** (`get_design_context`). Các phần còn lại bám theo cấu trúc layout của frame khi MCP đạt giới hạn gọi (Starter plan). |
+| **UI** | All Featured + Sort / Filter; search placeholder *Search any Product..*; categories cuộn ngang; banner promo; Deal of the Day; product cards cuộn ngang; Special Offers; Sponsored (ảnh mẫu qua URL). |
+| **Stack** | NativeWind (`className`), `@expo/vector-icons` (Feather, Ionicons), `ScrollView` (dọc + ngang). |
 
 ---
 

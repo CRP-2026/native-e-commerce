@@ -1,14 +1,14 @@
 export interface Product {
   id: string;
-  name: string;
-  price: number;
-  originalPrice?: number;
-  description: string;
-  image: string;
+  title: string;
+  subtitle: string;
+  price: string;
+  oldPrice?: string;
+  originalPrice?: string;
+  discount?: string;
   rating: number;
   reviews: number;
-  category: string;
-  stock: number;
+  image: string;
 }
 
 export interface User {
@@ -27,4 +27,10 @@ export interface Address {
   address: string;
   city: string;
   isDefault: boolean;
+}
+
+export interface Category {
+  id: string;
+  label: string;
+  image: string;
 }

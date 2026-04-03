@@ -15,9 +15,9 @@ import { PillButton } from '../../components/home/PillButton';
 import { ProductCard } from '../../components/home/ProductCard';
 import { SectionBadge } from '../../components/home/SectionBadge';
 import { homeCategories, homeProducts } from '../../components/home/mockData';
-import type { HomeProduct } from '../../components/home/mockData';
+import type { Product } from '../../lib/types/models';
 
-function ProductCarousel({ products }: { products: HomeProduct[] }) {
+function ProductCarousel({ products }: { products: Product[] }) {
   return (
     <ScrollView
       horizontal

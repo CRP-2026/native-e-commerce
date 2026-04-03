@@ -1,3 +1,4 @@
+import { Product as IProduct } from "@/lib/types/models";
 export type HomeCategory = {
   id: string;
   label: string;
