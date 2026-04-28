@@ -1,9 +1,9 @@
 import { Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
-import type { HomeCategory } from './mockData';
+import type { Category as ICategory } from '@/lib/types/models';
 
 type Props = {
-  categories: HomeCategory[];
+  categories: ICategory[];
 };
 
 export function CategoryList({ categories }: Props) {
