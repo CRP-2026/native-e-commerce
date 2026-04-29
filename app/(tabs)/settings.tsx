@@ -36,6 +36,11 @@ export default function Settings() {
             onPress={handleResetOnboarding}>
             <Text className="text-base font-semibold text-[#F83758]">Reset Onboarding</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            className="items-center rounded-lg bg-[#F97316] py-3"
+            onPress={() => router.push('/(tabs)/cart')}>
+            <Text className="text-base font-semibold text-white">Open Cart (Test)</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </>

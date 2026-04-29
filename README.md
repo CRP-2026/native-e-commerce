@@ -1,6 +1,6 @@
 # Native E-Commerce App - React Native với Expo Router
 
-Dự án React Native thương mại điện tử sử dụng Expo SDK 54, Expo Router v6, NativeWind (Tailwind CSS), và Zustand để quản lý state.
+Dự án React Native thương mại điện tử sử dụng Expo SDK 54, Expo Router v6 và NativeWind (Tailwind CSS).
 
 ## 📋 Mục Lục
 
@@ -205,8 +205,7 @@ my-app/
 │   ├── api/
 │   │   └── client.ts                # API client (fetch wrapper)
 │   │
-│   ├── store/
-│   │   └── store.ts                 # Zustand store (global state)
+│   ├── store/                        # Placeholder for global store (optional)
 │   │
 │   ├── types/
 │   │   └── models.ts                # TypeScript types & interfaces
@@ -310,57 +309,26 @@ my-app/
 
 ### Màn Home (tab đầu tiên — Shop)
 
-| Mục | Chi tiết |
-|-----|----------|
-| **File** | `app/(tabs)/index.tsx` — component `HomeScreen`, `Stack.Screen` title **Home** |
-| **Thiết kế tham chiếu** | Figma — *eCommerce App UI Kit* (Community), frame **Home page** (`node-id=1-17021`). Một số block (ví dụ search bar, header All Featured + Sort/Filter) lấy qua **Figma MCP** (`get_design_context`). Các phần còn lại bám theo cấu trúc layout của frame khi MCP đạt giới hạn gọi (Starter plan). |
-| **UI** | All Featured + Sort / Filter; search placeholder *Search any Product..*; categories cuộn ngang; banner promo; Deal of the Day; product cards cuộn ngang; Special Offers; Sponsored (ảnh mẫu qua URL). |
-| **Stack** | NativeWind (`className`), `@expo/vector-icons` (Feather, Ionicons), `ScrollView` (dọc + ngang). |
+| Mục                     | Chi tiết                                                                                                                                                                                                                                                                                           |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **File**                | `app/(tabs)/index.tsx` — component `HomeScreen`, `Stack.Screen` title **Home**                                                                                                                                                                                                                     |
+| **Thiết kế tham chiếu** | Figma — _eCommerce App UI Kit_ (Community), frame **Home page** (`node-id=1-17021`). Một số block (ví dụ search bar, header All Featured + Sort/Filter) lấy qua **Figma MCP** (`get_design_context`). Các phần còn lại bám theo cấu trúc layout của frame khi MCP đạt giới hạn gọi (Starter plan). |
+| **UI**                  | All Featured + Sort / Filter; search placeholder _Search any Product.._; categories cuộn ngang; banner promo; Deal of the Day; product cards cuộn ngang; Special Offers; Sponsored (ảnh mẫu qua URL).                                                                                              |
+| **Stack**               | NativeWind (`className`), `@expo/vector-icons` (Feather, Ionicons), `ScrollView` (dọc + ngang).                                                                                                                                                                                                    |
 
 ---
 
-## 🎯 State Management (Zustand)
+🎯 State Management
 
-Quản lý state global thông qua `lib/store/store.ts`:
+Hiện tại dự án sử dụng các hook cục bộ trong `features/*/hooks/` để quản lý
+trạng thái (ví dụ: `useCart`, `useAuth`). Thư mục `lib/store/` tồn tại như
+placeholder nếu bạn muốn thêm một global store (ví dụ: Zustand) sau này.
 
-```typescript
-import { useStore } from '~/lib/store/store';
+Hướng dẫn ngắn:
 
-// Auth state
-const { user, isLoggedIn, login, logout } = useStore();
-
-// Cart state
-const { cart, addToCart, removeFromCart, getCartTotal } = useStore();
-
-// Products
-const { products, setProducts } = useStore();
-
-// Favorites
-const { favorites, toggleFavorite, isFavorite } = useStore();
-```
-
-### Store Actions
-
-**Auth:**
-
-- `setUser(user)` - Set user
-- `setLogin(user, token)` - Login
-- `logout()` - Logout
-
-**Cart:**
-
-- `addToCart(item)` - Thêm sản phẩm
-- `removeFromCart(productId)` - Xóa sản phẩm
-- `updateCartQuantity(productId, qty)` - Sửa số lượng
-- `clearCart()` - Xóa toàn bộ giỏ
-- `getCartTotal()` - Tính tổng tiền
-- `getCartCount()` - Đếm số sản phẩm
-
-**Products:**
-
-- `setProducts(products)` - Set danh sách
-- `toggleFavorite(productId)` - Thêm/xóa yêu thích
-- `isFavorite(productId)` - Kiểm tra yêu thích
+- Dùng các hook trong `features/*/hooks/` cho logic feature-local.
+- Nếu cần state toàn cục, tạo `lib/store/` và export hook/selector chung.
+- Kiểm tra `features/cart/hooks/useCart.ts` để xem pattern sử dụng hooks cục bộ.
 
 ---
 

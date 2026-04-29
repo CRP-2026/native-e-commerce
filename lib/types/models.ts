@@ -34,3 +34,4 @@ export interface Category {
   label: string;
   image: string;
 }
+
