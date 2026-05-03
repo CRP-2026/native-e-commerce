@@ -22,12 +22,6 @@ Dự án React Native thương mại điện tử sử dụng Expo SDK 54, Expo 
 - **Git**: Để quản lý version control
 - **Expo CLI**: Cài đặt global (optional) hoặc sử dụng `npx expo`
 
-### Development Tools (Tùy chọn)
-
-- **Android Studio**: Cho Android development
-- **Xcode**: Cho iOS development (chỉ trên macOS)
-- **VS Code**: Editor được khuyến nghị
-
 ---
 
 ## 🚀 Cài Đặt
@@ -302,33 +296,6 @@ my-app/
 
 - **Login** (`(auth)/login.tsx`) - Đăng nhập
 - **Sign Up** (`(auth)/signup.tsx`) - Đăng ký
-
----
-
-## 📝 Cập nhật gần đây
-
-### Màn Home (tab đầu tiên — Shop)
-
-| Mục                     | Chi tiết                                                                                                                                                                                                                                                                                           |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **File**                | `app/(tabs)/index.tsx` — component `HomeScreen`, `Stack.Screen` title **Home**                                                                                                                                                                                                                     |
-| **Thiết kế tham chiếu** | Figma — _eCommerce App UI Kit_ (Community), frame **Home page** (`node-id=1-17021`). Một số block (ví dụ search bar, header All Featured + Sort/Filter) lấy qua **Figma MCP** (`get_design_context`). Các phần còn lại bám theo cấu trúc layout của frame khi MCP đạt giới hạn gọi (Starter plan). |
-| **UI**                  | All Featured + Sort / Filter; search placeholder _Search any Product.._; categories cuộn ngang; banner promo; Deal of the Day; product cards cuộn ngang; Special Offers; Sponsored (ảnh mẫu qua URL).                                                                                              |
-| **Stack**               | NativeWind (`className`), `@expo/vector-icons` (Feather, Ionicons), `ScrollView` (dọc + ngang).                                                                                                                                                                                                    |
-
----
-
-🎯 State Management
-
-Hiện tại dự án sử dụng các hook cục bộ trong `features/*/hooks/` để quản lý
-trạng thái (ví dụ: `useCart`, `useAuth`). Thư mục `lib/store/` tồn tại như
-placeholder nếu bạn muốn thêm một global store (ví dụ: Zustand) sau này.
-
-Hướng dẫn ngắn:
-
-- Dùng các hook trong `features/*/hooks/` cho logic feature-local.
-- Nếu cần state toàn cục, tạo `lib/store/` và export hook/selector chung.
-- Kiểm tra `features/cart/hooks/useCart.ts` để xem pattern sử dụng hooks cục bộ.
 
 ---
 
