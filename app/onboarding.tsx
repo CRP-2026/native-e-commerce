@@ -55,7 +55,11 @@ export default function OnboardingScreen() {
       return;
     }
 
-    flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+    const nextIndex = Math.min(currentIndex + 1, slides.length - 1);
+
+    // Use offset-based scrolling to avoid FlatList scrollToIndex measurement failures.
+    flatListRef.current?.scrollToOffset({ offset: nextIndex * width, animated: true });
+    setCurrentIndex(nextIndex);
   };
 
   const onMomentumScrollEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -85,8 +89,12 @@ export default function OnboardingScreen() {
         renderItem={({ item }) => (
           <View style={{ width }} className="items-center px-8 pt-4">
             <Image source={item.image} className="h-[280px] w-[280px]" resizeMode="contain" />
-            <Text className="mt-8 text-center text-[34px] font-bold text-[#202020]">{item.title}</Text>
-            <Text className="mt-4 text-center text-base leading-6 text-[#7f7f7f]">{item.subtitle}</Text>
+            <Text className="mt-8 text-center text-[34px] font-bold text-[#202020]">
+              {item.title}
+            </Text>
+            <Text className="mt-4 text-center text-base leading-6 text-[#7f7f7f]">
+              {item.subtitle}
+            </Text>
           </View>
         )}
       />
@@ -101,8 +109,12 @@ export default function OnboardingScreen() {
           ))}
         </View>
 
-        <TouchableOpacity className="items-center rounded-full bg-[#f83758] py-4" onPress={nextSlide}>
-          <Text className="text-lg font-semibold text-white">{isLastSlide ? 'Get Started' : 'Next'}</Text>
+        <TouchableOpacity
+          className="items-center rounded-full bg-[#f83758] py-4"
+          onPress={nextSlide}>
+          <Text className="text-lg font-semibold text-white">
+            {isLastSlide ? 'Get Started' : 'Next'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

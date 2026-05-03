@@ -1,3 +1,4 @@
+import { ProductVariant } from './products';
 export interface User {
   id: string;
   name: string;
