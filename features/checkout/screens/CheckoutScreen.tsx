@@ -1,0 +1,311 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Stack, useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+
+import { Button } from '~/components/Button';
+import { useCart } from '~/features/cart/hooks/useCart';
+import { formatCurrency } from '~/lib/utils/formatters';
+import type { Address } from '~/lib/types/models';
+
+const shippingAddresses: Address[] = [
+  {
+    id: 'addr-1',
+    name: 'Vo Tan Duc',
+    phone: '0901123456',
+    address: '65 Nguyen Trai, Ward 7, District 5',
+    city: 'Ho Chi Minh City',
+    isDefault: true,
+  },
+  {
+    id: 'addr-2',
+    name: 'Vo Tan Duc - Office',
+    phone: '0901123456',
+    address: '12 Nguyen Hue, District 1',
+    city: 'Ho Chi Minh City',
+    isDefault: false,
+  },
+];
+
+const paymentMethods = [
+  {
+    id: 'card',
+    title: 'Credit / Debit Card',
+    subtitle: 'Visa, Mastercard, JCB',
+    icon: 'card-outline' as const,
+  },
+  {
+    id: 'cod',
+    title: 'Cash on Delivery',
+    subtitle: 'Pay when your parcel arrives',
+    icon: 'cash-outline' as const,
+  },
+  {
+    id: 'wallet',
+    title: 'E-wallet',
+    subtitle: 'Momo, ZaloPay, VNPay',
+    icon: 'wallet-outline' as const,
+  },
+];
+
+export default function CheckoutScreen() {
+  const router = useRouter();
+  const { items, clearCart } = useCart();
+  const [selectedAddressId, setSelectedAddressId] = useState(shippingAddresses[0]?.id ?? '');
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(
+    paymentMethods[0]?.id ?? ''
+  );
+
+  const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const shipping = items.length ? 15 : 0;
+  const discount = 0;
+  const total = subtotal + shipping - discount;
+
+  const selectedAddress = useMemo(
+    () =>
+      shippingAddresses.find((address) => address.id === selectedAddressId) ?? shippingAddresses[0],
+    [selectedAddressId]
+  );
+
+  const selectedPaymentMethod = useMemo(
+    () =>
+      paymentMethods.find((method) => method.id === selectedPaymentMethodId) ?? paymentMethods[0],
+    [selectedPaymentMethodId]
+  );
+
+  const handlePlaceOrder = () => {
+    clearCart();
+    router.replace('/(tabs)/order');
+  };
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          title: 'Checkout',
+          headerShadowVisible: false,
+        }}
+      />
+
+      <View className="flex-1 bg-[#F8FAFC]">
+        <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
+          <View className="px-5 pb-8 pt-3">
+            <Text className="text-[13px] uppercase tracking-[3px] text-[#F97316]">
+              Secure checkout
+            </Text>
+            <Text className="mt-2 text-[30px] font-bold text-[#111827]">Payment</Text>
+
+            {items.length === 0 ? (
+              <View className="mt-5 rounded-[28px] bg-white p-6 shadow-sm">
+                <Text className="text-center text-[15px] text-[#6B7280]">Your cart is empty.</Text>
+                <View className="mt-4">
+                  <Button title="Back to Shop" onPress={() => router.replace('/(tabs)')} />
+                </View>
+              </View>
+            ) : (
+              <>
+                <View className="mt-5 rounded-[28px] bg-white p-4 shadow-sm">
+                  <View className="flex-row items-center justify-between">
+                    <View>
+                      <Text className="text-[16px] font-semibold text-[#111827]">
+                        Shipping address
+                      </Text>
+                      <Text className="mt-1 text-[13px] text-[#6B7280]">
+                        Where should we deliver?
+                      </Text>
+                    </View>
+                    <Pressable onPress={() => router.push('/address')}>
+                      <Text className="text-[13px] font-semibold text-[#F97316]">Change</Text>
+                    </Pressable>
+                  </View>
+
+                  <View className="mt-4 gap-3">
+                    {shippingAddresses.map((address) => {
+                      const isSelected = address.id === selectedAddressId;
+
+                      return (
+                        <Pressable
+                          key={address.id}
+                          onPress={() => setSelectedAddressId(address.id)}
+                          className={`rounded-[22px] border p-4 ${
+                            isSelected
+                              ? 'border-[#F97316] bg-[#FFF9F5]'
+                              : 'border-[#E5E7EB] bg-white'
+                          }`}>
+                          <View className="flex-row items-start gap-3">
+                            <View
+                              className={`mt-1 h-10 w-10 items-center justify-center rounded-full ${
+                                isSelected ? 'bg-[#F97316]' : 'bg-[#F3F4F6]'
+                              }`}>
+                              <Ionicons
+                                name="location-outline"
+                                size={18}
+                                color={isSelected ? '#FFFFFF' : '#6B7280'}
+                              />
+                            </View>
+                            <View className="flex-1">
+                              <View className="flex-row items-center gap-2">
+                                <Text className="text-[15px] font-semibold text-[#111827]">
+                                  {address.name}
+                                </Text>
+                                {address.isDefault ? (
+                                  <View className="rounded-full bg-[#DCFCE7] px-2 py-1">
+                                    <Text className="text-[10px] font-semibold text-[#166534]">
+                                      Default
+                                    </Text>
+                                  </View>
+                                ) : null}
+                              </View>
+                              <Text className="mt-1 text-[13px] leading-[20px] text-[#6B7280]">
+                                {address.address}
+                              </Text>
+                              <Text className="mt-1 text-[13px] text-[#6B7280]">
+                                {address.city} • {address.phone}
+                              </Text>
+                            </View>
+                            <View
+                              className={`mt-1 h-5 w-5 rounded-full border-2 ${
+                                isSelected
+                                  ? 'border-[#F97316] bg-[#F97316]'
+                                  : 'border-[#D1D5DB] bg-white'
+                              }`}>
+                              {isSelected ? (
+                                <View className="m-[3px] h-1.5 w-1.5 rounded-full bg-white" />
+                              ) : null}
+                            </View>
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+
+                  <Pressable
+                    className="mt-4 flex-row items-center justify-between rounded-[20px] bg-[#F8FAFC] px-4 py-3"
+                    onPress={() => router.push('/address')}>
+                    <View>
+                      <Text className="text-[12px] uppercase tracking-[1.5px] text-[#6B7280]">
+                        Manage addresses
+                      </Text>
+                      <Text className="mt-1 text-[13px] font-semibold text-[#111827]">
+                        Open address book
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+                  </Pressable>
+                </View>
+
+                <View className="mt-4 rounded-[28px] bg-white p-4 shadow-sm">
+                  <Text className="text-[16px] font-semibold text-[#111827]">Payment method</Text>
+                  <Text className="mt-1 text-[13px] text-[#6B7280]">
+                    Choose how you want to pay
+                  </Text>
+
+                  <View className="mt-4 gap-3">
+                    {paymentMethods.map((method) => {
+                      const isSelected = method.id === selectedPaymentMethodId;
+                      return (
+                        <Pressable
+                          key={method.id}
+                          onPress={() => setSelectedPaymentMethodId(method.id)}
+                          className={`flex-row items-center rounded-[22px] border p-4 ${
+                            isSelected
+                              ? 'border-[#F97316] bg-[#FFF7F2]'
+                              : 'border-[#E5E7EB] bg-white'
+                          }`}>
+                          <View
+                            className={`mr-3 h-11 w-11 items-center justify-center rounded-full ${
+                              isSelected ? 'bg-[#F97316]' : 'bg-[#F3F4F6]'
+                            }`}>
+                            <Ionicons
+                              name={method.icon}
+                              size={20}
+                              color={isSelected ? '#FFFFFF' : '#6B7280'}
+                            />
+                          </View>
+                          <View className="flex-1">
+                            <Text className="text-[15px] font-semibold text-[#111827]">
+                              {method.title}
+                            </Text>
+                            <Text className="mt-1 text-[13px] text-[#6B7280]">
+                              {method.subtitle}
+                            </Text>
+                          </View>
+                          <View
+                            className={`h-5 w-5 rounded-full border-2 ${
+                              isSelected
+                                ? 'border-[#F97316] bg-[#F97316]'
+                                : 'border-[#D1D5DB] bg-white'
+                            }`}>
+                            {isSelected ? (
+                              <View className="m-[3px] h-1.5 w-1.5 rounded-full bg-white" />
+                            ) : null}
+                          </View>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                <View className="mt-4 rounded-[28px] bg-white p-4 shadow-sm">
+                  <Text className="text-[16px] font-semibold text-[#111827]">Order summary</Text>
+
+                  <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
+                  <SummaryRow label="Shipping" value={formatCurrency(shipping)} />
+                  <SummaryRow
+                    label="Discount"
+                    value={`-${formatCurrency(discount)}`}
+                    valueClass="text-[#12B76A]"
+                  />
+
+                  <View className="my-3 h-[1px] bg-[#F3F4F6]" />
+
+                  <SummaryRow label="Total" value={formatCurrency(total)} total />
+
+                  <View className="mt-3 rounded-[20px] bg-[#F8FAFC] p-3">
+                    <Text className="text-[12px] uppercase tracking-[1.5px] text-[#6B7280]">
+                      Selected payment
+                    </Text>
+                    <Text className="mt-1 text-[14px] font-semibold text-[#111827]">
+                      {selectedPaymentMethod?.title}
+                    </Text>
+                  </View>
+                </View>
+
+                <View className="mt-5">
+                  <Button title="Place Order" onPress={handlePlaceOrder} />
+                </View>
+              </>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+    </>
+  );
+}
+
+function SummaryRow({
+  label,
+  value,
+  valueClass = 'text-[#111827]',
+  total = false,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+  total?: boolean;
+}) {
+  return (
+    <View className="mb-3 flex-row items-center justify-between">
+      <Text
+        className={
+          total ? 'text-[16px] font-semibold text-[#111827]' : 'text-[14px] text-[#6B7280]'
+        }>
+        {label}
+      </Text>
+      <Text
+        className={`${total ? 'text-[20px] font-bold' : 'text-[14px] font-semibold'} ${valueClass}`}>
+        {value}
+      </Text>
+    </View>
+  );
+}
