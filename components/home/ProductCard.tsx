@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 
-import type { HomeProduct } from './mockData';
+import { formatCurrency } from '~/lib/utils/formatters';
+import type { ProductSummary } from '~/lib/types/products';
 
 type Props = {
-  product: HomeProduct;
+  product: ProductSummary;
 };
 
 export function ProductCard({ product }: Props) {
@@ -20,15 +21,18 @@ export function ProductCard({ product }: Props) {
 
       <View className="mt-3 gap-1">
         <Text className="text-[14px] font-semibold text-[#232327]" numberOfLines={1}>
-          {product.title}
+          {product.name}
         </Text>
         <Text className="text-[12px] leading-[16px] text-[#6A6A6A]" numberOfLines={2}>
-          {product.subtitle}
+          {product.description}
         </Text>
         <View className="mt-1 flex-row items-center gap-2">
-          <Text className="text-[15px] font-semibold text-[#232327]">{product.price}</Text>
-          <Text className="text-[12px] text-[#A0A0A0] line-through">{product.oldPrice}</Text>
-          <Text className="text-[12px] text-[#F83758]">{product.discount}</Text>
+          <Text className="text-[15px] font-semibold text-[#232327]">
+            {formatCurrency(product.price)}
+          </Text>
+          {product.discount ? (
+            <Text className="text-[12px] text-[#F83758]">{product.discount}</Text>
+          ) : null}
         </View>
         <View className="flex-row items-center gap-1">
           <Ionicons name="star" size={14} color="#FFC107" />
