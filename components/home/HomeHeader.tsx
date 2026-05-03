@@ -5,17 +5,17 @@ export function HomeHeader() {
   return (
     <>
       <View className="mt-2 flex-row items-center justify-between">
-        <TouchableOpacity
+        {/* <TouchableOpacity
           activeOpacity={0.8}
           className="h-8 w-8 items-center justify-center rounded-full bg-[#EFEFEF]">
           <Feather name="menu" size={18} color="#232327" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View className="flex-row items-center gap-2">
           <View className="h-8 w-8 items-center justify-center rounded-full bg-[#F83758]">
             <View className="h-5 w-5 rounded-full border-[3px] border-[#66B2FF]" />
           </View>
-          <Text className="text-[28px] font-bold tracking-wide text-[#4A81D8]">Stylish</Text>
+          <Text className="text-[28px] font-bold tracking-wide text-[#4A81D8]">StyleUp</Text>
         </View>
 
         <Image

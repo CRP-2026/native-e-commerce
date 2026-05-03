@@ -1,16 +1,3 @@
-export interface Product {
-  id: string;
-  title: string;
-  subtitle: string;
-  price: string;
-  oldPrice?: string;
-  originalPrice?: string;
-  discount?: string;
-  rating: number;
-  reviews: number;
-  image: string;
-}
-
 export interface User {
   id: string;
   name: string;
@@ -18,6 +5,20 @@ export interface User {
   phone?: string;
   avatar?: string;
   addresses?: Address[];
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  image: string;
+  description: string;
+  price: number;
+  variants: ProductVariant[];
+  rating: number;
+  reviews: number;
+  categoryId?: string;
+  discount?: number;
+  images?: string[];
 }
 
 export interface Address {
@@ -34,4 +35,3 @@ export interface Category {
   label: string;
   image: string;
 }
-

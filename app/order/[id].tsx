@@ -1,57 +1,29 @@
 // app/order/[id].tsx
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { StyleSheet, View, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { getOrderById } from '~/features/order/services/orderData';
 import { formatCurrency, formatDate } from '~/lib/utils/formatters';
 
 export default function OrderDetailScreen() {
+  const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const resolvedId = Array.isArray(id) ? id[0] : id;
+  const order = resolvedId ? getOrderById(resolvedId) : undefined;
 
-  // Mock order data - replace with API call
-  const order = {
-    id: id || 'ORD001',
-    date: new Date('2024-01-15'),
-    status: 'shipped',
-    total: 500000,
-    items: [
-      {
-        id: '1',
-        name: 'Premium Wireless Headphones',
-        price: 299000,
-        quantity: 1,
-        image: 'https://via.placeholder.com/100',
-      },
-      {
-        id: '2',
-        name: 'USB-C Cable',
-        price: 50000,
-        quantity: 1,
-        image: 'https://via.placeholder.com/100',
-      },
-      {
-        id: '3',
-        name: 'Phone Case',
-        price: 151000,
-        quantity: 1,
-        image: 'https://via.placeholder.com/100',
-      },
-    ],
-    shippingAddress: {
-      name: 'John Doe',
-      phone: '0123456789',
-      address: '123 Main Street, Apt 4B',
-      city: 'Ho Chi Minh City',
-    },
-    paymentMethod: 'Credit Card',
-    tracking: 'SHIP123456789',
-    estimatedDelivery: new Date('2024-01-18'),
-    timeline: [
-      { status: 'Order Placed', date: new Date('2024-01-15'), completed: true },
-      { status: 'Processing', date: new Date('2024-01-16'), completed: true },
-      { status: 'Shipped', date: new Date('2024-01-17'), completed: true },
-      { status: 'Out for Delivery', date: new Date('2024-01-18'), completed: false },
-      { status: 'Delivered', date: new Date('2024-01-18'), completed: false },
-    ],
-  };
+  if (!order) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Order Details' }} />
+        <View style={styles.notFoundContainer}>
+          <Text style={styles.notFoundTitle}>Order not found</Text>
+          <Text style={styles.notFoundSubtitle}>Please check your order id and try again.</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
+            <Text style={styles.primaryButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -60,6 +32,10 @@ export default function OrderDetailScreen() {
       case 'shipped':
         return '#FF9500';
       case 'pending':
+        return '#FF3B30';
+      case 'processing':
+        return '#0EA5E9';
+      case 'cancelled':
         return '#FF3B30';
       default:
         return '#666';
@@ -196,6 +172,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  notFoundContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    padding: 24,
+    gap: 8,
+  },
+  notFoundTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  notFoundSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   header: {
     backgroundColor: '#fff',

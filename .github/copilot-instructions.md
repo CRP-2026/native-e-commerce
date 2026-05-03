@@ -58,3 +58,10 @@ Hiện tại ưu tiên phát triển UI mượt mà, tái sử dụng component 
 - Testing steps trên Simulator + Emulator
 - Screenshots cho thay đổi UI
 - Đã chạy `npm run lint && npm run format`
+
+## Type Usage Rules
+
+- **Khi nào đặt ở `models.ts`:** Dùng chung toàn app (Product, User, Address, Category). Ổn định, ít thay đổi. Mục đích: contract nền tảng để nhiều feature tái sử dụng.
+- **Khi đặt ở `lib/types`:** Type chỉ liên quan/chi tiết cho một feature (Order timeline, ProductVariant, Review). Nghiệp vụ hay thay đổi nhanh, hoặc có nhiều dạng (summary/detail).
+
+

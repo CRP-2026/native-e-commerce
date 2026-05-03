@@ -1,6 +1,5 @@
-import { Product as IProduct, Category as ICategory } from "@/lib/types/models";
-
-
+import type { Category as ICategory } from '~/lib/types/models';
+import { getProductSummaries } from '~/features/product/services/productData';
 
 export const homeCategories: ICategory[] = [
   {
@@ -35,41 +34,4 @@ export const homeCategories: ICategory[] = [
   },
 ];
 
-export const homeProducts: IProduct[] = [
-  {
-    id: '1',
-    title: 'Women Printed Kurta',
-    subtitle: 'Neque porro quisquam est qui dolorem ipsum quia',
-    image:
-      'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=720&q=60',
-    price: '$1500',
-    oldPrice: '$2499',
-    discount: '40% off',
-    rating: 4,
-    reviews: 56890,
-  },
-  {
-    id: '2',
-    title: 'HRX by Hrithik Roshan',
-    subtitle: 'Neque porro quisquam est qui dolorem ipsum quia',
-    image:
-      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=720&q=60',
-    price: '$2499',
-    oldPrice: '$4999',
-    discount: '50% off',
-    rating: 4,
-    reviews: 344567,
-  },
-  {
-    id: '3',
-    title: 'Labbin White Sneakers',
-    subtitle: 'For Men and Female',
-    image:
-      'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=720&q=60',
-    price: '$650',
-    oldPrice: '$1250',
-    discount: '70% off',
-    rating: 4,
-    reviews: 9981,
-  },
-];
+export const homeProducts = getProductSummaries();
