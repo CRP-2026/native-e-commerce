@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Stack } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
@@ -12,12 +12,11 @@ import {
 } from '~/features/product/services/productData';
 import { formatCurrency } from '~/lib/utils/formatters';
 
-type Props = {
-  productId: string;
-};
-
-export default function ProductDetailScreen({ productId }: Props) {
+export default function ProductDetailScreen() {
   const { addToCart } = useCart();
+  const params = useLocalSearchParams<{ id?: string | string[] }>();
+  const resolvedProductId = Array.isArray(params.id) ? params.id[0] : params.id;
+  const productId = resolvedProductId ?? '';
   const product = getProductById(productId);
   const [selectedVariantId, setSelectedVariantId] = useState('');
   const [quantity, setQuantity] = useState(1);
@@ -53,7 +52,7 @@ export default function ProductDetailScreen({ productId }: Props) {
 
   const handleAddToCart = () => {
     if (!selectedVariant) return;
-    addToCart(product.id, selectedVariant.id, quantity);
+    addToCart(product, quantity);
   };
 
   return (

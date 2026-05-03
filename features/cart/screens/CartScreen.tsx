@@ -1,13 +1,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '~/components/Button';
-import useCart from '~/features/cart/hooks/useCart';
+import { useCart } from '~/features/cart/hooks/useCart';
 
 export default function CartScreen() {
-  const { items, updateQuantity, removeFromCart, getCartTotal } = useCart();
+  const router = useRouter();
+  const { items, updateQuantity, removeFromCart } = useCart();
 
   const subtotal = items.reduce((s, i) => {
     const price = parseFloat((i.product.price || '0').replace(/[^0-9.-]+/g, '')) || 0;
@@ -56,7 +57,9 @@ export default function CartScreen() {
                     65 Nguyen Trai, Ward 7, District 5, HCMC
                   </Text>
                 </View>
-                <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+                <Pressable onPress={() => router.push('/address')}>
+                  <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+                </Pressable>
               </View>
             </View>
 
@@ -102,7 +105,7 @@ export default function CartScreen() {
               <SummaryRow label="Total" value={formatMoney(total)} total />
 
               <View className="mt-4">
-                <Button title="Checkout" onPress={() => {}} />
+                <Button title="Checkout" onPress={() => router.push('/checkout')} />
               </View>
             </View>
           </View>
