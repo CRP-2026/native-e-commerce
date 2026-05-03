@@ -1,9 +1,11 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import { View, Text, Pressable, Image } from 'react-native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 export default function AccountScreen() {
+  const router = useRouter();
+
   return (
     <>
       <Stack.Screen options={{ title: 'Sửa hồ sơ' }} />
@@ -17,7 +19,9 @@ export default function AccountScreen() {
                 className="h-24 w-24"
                 resizeMode="cover"
               />
-              <Pressable className="absolute bottom-0 right-0 rounded-full bg-white p-1 shadow">
+              <Pressable
+                className="absolute bottom-0 right-0 rounded-full bg-white p-1 shadow"
+                onPress={() => router.push('/account/edit')}>
                 <FontAwesome name="pencil" size={16} color="#f97316" />
               </Pressable>
             </View>
