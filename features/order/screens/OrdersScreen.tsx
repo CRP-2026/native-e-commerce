@@ -1,14 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { getOrderSummaries } from '~/features/order/services/orderData';
-import type { OrderStatus } from '~/lib/types/orders';
+import { ApiError } from '~/lib/api/errors';
+import { fetchOrderSummaries } from '~/lib/api/orders';
+import type { OrderStatus, OrderSummary } from '~/lib/types/orders';
 import { formatCurrency, formatDate } from '~/lib/utils/formatters';
 
 type OrderFilter = 'all' | OrderStatus;
-type OrderItem = ReturnType<typeof getOrderSummaries>[number];
 
 const statusFilters: { label: string; value: OrderFilter }[] = [
   { label: 'All', value: 'all' },
@@ -40,21 +41,30 @@ export default function OrdersScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<OrderFilter>('all');
-  const [orders, setOrders] = useState<OrderItem[]>([]);
+  const [orders, setOrders] = useState<OrderSummary[]>([]);
+  const [needLogin, setNeedLogin] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setOrders(getOrderSummaries());
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    setNeedLogin(false);
+    try {
+      const data = await fetchOrderSummaries(activeFilter === 'all' ? undefined : activeFilter);
+      setOrders(data);
+    } catch (e) {
+      setOrders([]);
+      if (e instanceof ApiError && e.status === 401) setNeedLogin(true);
+    } finally {
       setIsLoading(false);
-    }, 450);
+    }
+  }, [activeFilter]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      void load();
+    }, [load])
+  );
 
-  const filteredOrders = useMemo(() => {
-    if (activeFilter === 'all') return orders;
-    return orders.filter((order) => order.status === activeFilter);
-  }, [orders, activeFilter]);
+  const filteredOrders = useMemo(() => orders, [orders]);
 
   return (
     <>
@@ -73,6 +83,19 @@ export default function OrdersScreen() {
           <View className="px-5 pb-7 pt-2">
             <Text className="text-[13px] uppercase tracking-[2.5px] text-[#2563EB]">History</Text>
             <Text className="mt-2 text-[30px] font-bold text-[#0F172A]">My Orders</Text>
+
+            {needLogin ? (
+              <View className="mt-4 rounded-[20px] bg-[#FEF3C7] p-4">
+                <Text className="text-[14px] text-[#92400E]">
+                  Đăng nhập để xem đơn hàng của bạn.
+                </Text>
+                <Pressable
+                  className="mt-3 self-start rounded-full bg-[#2563EB] px-4 py-2"
+                  onPress={() => router.push('/(auth)/login')}>
+                  <Text className="text-[13px] font-semibold text-white">Login</Text>
+                </Pressable>
+              </View>
+            ) : null}
 
             <ScrollView
               horizontal
@@ -129,7 +152,7 @@ export default function OrdersScreen() {
                   <OrderCard
                     key={order.id}
                     order={order}
-                    onPress={() => router.push(`/order/${order.id}`)}
+                    onPress={() => router.push(`/order/${encodeURIComponent(order.id)}`)}
                   />
                 ))}
               </View>
@@ -141,7 +164,7 @@ export default function OrdersScreen() {
   );
 }
 
-function OrderCard({ order, onPress }: { order: OrderItem; onPress: () => void }) {
+function OrderCard({ order, onPress }: { order: OrderSummary; onPress: () => void }) {
   const badge = statusBadge(order.status);
 
   return (

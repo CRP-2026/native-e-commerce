@@ -16,6 +16,7 @@ export type OrderLineItem = {
 
 export type OrderDetail = {
   id: string;
+  code: string;
   date: string;
   status: OrderStatus;
   total: number;
@@ -28,7 +29,7 @@ export type OrderDetail = {
   };
   paymentMethod: string;
   tracking: string;
-  estimatedDelivery: string;
+  estimatedDelivery?: string;
   timeline: OrderTimelineEvent[];
 };
 

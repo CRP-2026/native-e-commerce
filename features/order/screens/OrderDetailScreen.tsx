@@ -1,10 +1,19 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
-import { getOrderById } from '~/features/order/services/orderData';
+import { ApiError } from '~/lib/api/errors';
+import { fetchOrderDetail } from '~/lib/api/orders';
+import type { OrderDetail, OrderStatus } from '~/lib/types/orders';
 import { formatCurrency, formatDate } from '~/lib/utils/formatters';
-import type { OrderStatus } from '~/lib/types/orders';
 
 function getStatusColor(status: OrderStatus) {
   switch (status) {
@@ -27,15 +36,61 @@ export default function OrderDetailScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const resolvedId = Array.isArray(params.id) ? params.id[0] : params.id;
-  const order = resolvedId ? getOrderById(resolvedId) : undefined;
 
-  if (!order) {
+  const [order, setOrder] = useState<OrderDetail | null>(null);
+  const [loading, setLoading] = useState(Boolean(resolvedId));
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    if (!resolvedId) {
+      setOrder(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const o = await fetchOrderDetail(resolvedId);
+      setOrder(o);
+    } catch (e) {
+      setOrder(null);
+      setError(e instanceof ApiError ? e.message : 'Could not load order.');
+    } finally {
+      setLoading(false);
+    }
+  }, [resolvedId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const subtotal = useMemo(
+    () => (order ? order.items.reduce((s, i) => s + i.price * i.quantity, 0) : 0),
+    [order]
+  );
+
+  const shippingOrAdjust = order ? Math.max(0, order.total - subtotal) : 0;
+
+  if (loading) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Order Details' }} />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      </>
+    );
+  }
+
+  if (error || !order) {
     return (
       <>
         <Stack.Screen options={{ title: 'Order Details' }} />
         <View style={styles.notFoundContainer}>
           <Text style={styles.notFoundTitle}>Order not found</Text>
-          <Text style={styles.notFoundSubtitle}>Please check your order id and try again.</Text>
+          <Text style={styles.notFoundSubtitle}>
+            {error ?? 'Please check your order id and try again.'}
+          </Text>
           <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
             <Text style={styles.primaryButtonText}>Go Back</Text>
           </TouchableOpacity>
@@ -52,7 +107,7 @@ export default function OrderDetailScreen() {
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View>
-              <Text style={styles.orderId}>Order #{order.id}</Text>
+              <Text style={styles.orderId}>#{order.code}</Text>
               <Text style={styles.orderDate}>{formatDate(order.date)}</Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
@@ -66,7 +121,7 @@ export default function OrderDetailScreen() {
         <View style={styles.trackingContainer}>
           <Text style={styles.sectionTitle}>Tracking Number</Text>
           <View style={styles.trackingBox}>
-            <Text style={styles.tracking}>{order.tracking}</Text>
+            <Text style={styles.tracking}>{order.tracking || '—'}</Text>
             <TouchableOpacity style={styles.copyButton}>
               <Text style={styles.copyButtonText}>Copy</Text>
             </TouchableOpacity>
@@ -76,7 +131,7 @@ export default function OrderDetailScreen() {
         <View style={styles.timelineContainer}>
           <Text style={styles.sectionTitle}>Delivery Timeline</Text>
           {order.timeline.map((event, index) => (
-            <View key={`${event.status}-${index}`} style={styles.timelineItem}>
+            <View key={`${event.date}-${event.status}-${index}`} style={styles.timelineItem}>
               <View style={styles.timelineLeft}>
                 <View
                   style={[
@@ -105,13 +160,19 @@ export default function OrderDetailScreen() {
           <Text style={styles.sectionTitle}>Items</Text>
           {order.items.map((item) => (
             <View key={item.id} style={styles.orderItem}>
-              <View style={styles.itemImage} />
+              {item.image ? (
+                <Image source={{ uri: item.image }} style={styles.itemImage} />
+              ) : (
+                <View style={styles.itemImage} />
+              )}
               <View style={styles.itemDetails}>
                 <Text style={styles.itemName}>{item.name}</Text>
                 <Text style={styles.itemPrice}>{formatCurrency(item.price)}</Text>
                 <Text style={styles.itemQuantity}>Qty: {item.quantity}</Text>
               </View>
-              <Text style={styles.itemTotal}>{formatCurrency(item.price * item.quantity)}</Text>
+              <Text style={styles.itemTotal}>
+                {formatCurrency(item.price * item.quantity)}
+              </Text>
             </View>
           ))}
         </View>
@@ -130,19 +191,26 @@ export default function OrderDetailScreen() {
           <Text style={styles.sectionTitle}>Order Summary</Text>
 
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(order.total * 0.9)}</Text>
+            <Text style={styles.summaryLabel}>Items subtotal</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(subtotal)}</Text>
           </View>
 
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Shipping</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(order.total * 0.1)}</Text>
+            <Text style={styles.summaryLabel}>Shipping & fees</Text>
+            <Text style={styles.summaryValue}>{formatCurrency(shippingOrAdjust)}</Text>
           </View>
 
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>{formatCurrency(order.total)}</Text>
           </View>
+
+          {order.estimatedDelivery ? (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Estimated delivery</Text>
+              <Text style={styles.summaryValue}>{formatDate(order.estimatedDelivery)}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.paymentMethod}>
             <Text style={styles.methodLabel}>Payment Method</Text>
@@ -166,6 +234,12 @@ export default function OrderDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
   },
   notFoundContainer: {
