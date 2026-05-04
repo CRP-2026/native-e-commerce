@@ -64,6 +64,10 @@ export function setAddressBackend(b: AddressLoad) {
   load = b;
 }
 
+export function resetAddressBackend() {
+  load = asyncStorageBackend;
+}
+
 export async function getAddresses(): Promise<Address[]> {
   return load.getAddresses();
 }
@@ -88,6 +92,7 @@ export async function createAddressPartial(data: Omit<Address, 'id'>): Promise<A
 
 export default {
   setAddressBackend,
+  resetAddressBackend,
   getAddresses,
   getAddressById,
   saveAddress,

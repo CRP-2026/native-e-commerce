@@ -1,31 +1,18 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '~/components/Button';
 import { useCart } from '~/features/cart/hooks/useCart';
-import { formatCurrency } from '~/lib/utils/formatters';
+import { getAddresses } from '~/features/account/services/addressStorage';
+import { ApiError } from '~/lib/api/errors';
+import { getAccessToken } from '~/lib/api/token';
+import { placeOrder } from '~/lib/api/orders';
 import type { Address } from '~/lib/types/models';
-
-const shippingAddresses: Address[] = [
-  {
-    id: 'addr-1',
-    name: 'Vo Tan Duc',
-    phone: '0901123456',
-    address: '65 Nguyen Trai, Ward 7, District 5',
-    city: 'Ho Chi Minh City',
-    isDefault: true,
-  },
-  {
-    id: 'addr-2',
-    name: 'Vo Tan Duc - Office',
-    phone: '0901123456',
-    address: '12 Nguyen Hue, District 1',
-    city: 'Ho Chi Minh City',
-    isDefault: false,
-  },
-];
+import { variantIdForOrderApi } from '~/lib/utils/variant';
+import { formatCurrency } from '~/lib/utils/formatters';
 
 const paymentMethods = [
   {
@@ -48,23 +35,49 @@ const paymentMethods = [
   },
 ];
 
+const SHIPPING_FEE_VND = 30_000;
+
 export default function CheckoutScreen() {
   const router = useRouter();
   const { items, clearCart } = useCart();
-  const [selectedAddressId, setSelectedAddressId] = useState(shippingAddresses[0]?.id ?? '');
+  const [shippingAddresses, setShippingAddresses] = useState<Address[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState('');
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(
     paymentMethods[0]?.id ?? ''
   );
+  const [placing, setPlacing] = useState(false);
+
+  const refreshAddresses = useCallback(async () => {
+    try {
+      const list = await getAddresses();
+      setShippingAddresses(list);
+      const def = list.find((a) => a.isDefault) ?? list[0];
+      setSelectedAddressId((prev) => {
+        if (prev && list.some((a) => a.id === prev)) return prev;
+        return def?.id ?? '';
+      });
+    } catch {
+      setShippingAddresses([]);
+      setSelectedAddressId('');
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void refreshAddresses();
+    }, [refreshAddresses])
+  );
 
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const shipping = items.length ? 15 : 0;
+  const shipping = items.length ? SHIPPING_FEE_VND : 0;
   const discount = 0;
   const total = subtotal + shipping - discount;
 
   const selectedAddress = useMemo(
     () =>
-      shippingAddresses.find((address) => address.id === selectedAddressId) ?? shippingAddresses[0],
-    [selectedAddressId]
+      shippingAddresses.find((address) => address.id === selectedAddressId) ??
+      shippingAddresses[0],
+    [selectedAddressId, shippingAddresses]
   );
 
   const selectedPaymentMethod = useMemo(
@@ -73,9 +86,44 @@ export default function CheckoutScreen() {
     [selectedPaymentMethodId]
   );
 
-  const handlePlaceOrder = () => {
-    clearCart();
-    router.replace('/(tabs)/order');
+  const handlePlaceOrder = async () => {
+    const token = await getAccessToken();
+    if (!token) {
+      Alert.alert('Cần đăng nhập', 'Đăng nhập để đặt hàng và gắn địa chỉ.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Login', onPress: () => router.push('/(auth)/login') },
+      ]);
+      return;
+    }
+    if (!selectedAddress) {
+      Alert.alert('Địa chỉ', 'Thêm địa chỉ giao hàng trước.', [
+        { text: 'OK', onPress: () => router.push('/addresses/new') },
+      ]);
+      return;
+    }
+    if (!items.length) return;
+
+    setPlacing(true);
+    try {
+      const created = await placeOrder({
+        items: items.map((it) => ({
+          productId: it.product.id,
+          variantId: variantIdForOrderApi(it.product.id, it.variantId),
+          quantity: it.quantity,
+        })),
+        shippingAddressId: selectedAddress.id,
+        paymentMethod: selectedPaymentMethodId,
+        shippingFee: shipping,
+        discountTotal: discount,
+      });
+      clearCart();
+      router.replace(`/order/${encodeURIComponent(created.id)}`);
+    } catch (e) {
+      const msg = e instanceof ApiError ? e.message : 'Đặt hàng thất bại.';
+      Alert.alert('Order failed', msg);
+    } finally {
+      setPlacing(false);
+    }
   };
 
   return (
@@ -120,68 +168,74 @@ export default function CheckoutScreen() {
                   </View>
 
                   <View className="mt-4 gap-3">
-                    {shippingAddresses.map((address) => {
-                      const isSelected = address.id === selectedAddressId;
+                    {shippingAddresses.length === 0 ? (
+                      <Text className="text-[14px] text-[#6B7280]">
+                        Chưa có địa chỉ. Đăng nhập và thêm địa chỉ trong Address book.
+                      </Text>
+                    ) : (
+                      shippingAddresses.map((address) => {
+                        const isSelected = address.id === selectedAddressId;
 
-                      return (
-                        <Pressable
-                          key={address.id}
-                          onPress={() => setSelectedAddressId(address.id)}
-                          className={`rounded-[22px] border p-4 ${
-                            isSelected
-                              ? 'border-[#F97316] bg-[#FFF9F5]'
-                              : 'border-[#E5E7EB] bg-white'
-                          }`}>
-                          <View className="flex-row items-start gap-3">
-                            <View
-                              className={`mt-1 h-10 w-10 items-center justify-center rounded-full ${
-                                isSelected ? 'bg-[#F97316]' : 'bg-[#F3F4F6]'
-                              }`}>
-                              <Ionicons
-                                name="location-outline"
-                                size={18}
-                                color={isSelected ? '#FFFFFF' : '#6B7280'}
-                              />
-                            </View>
-                            <View className="flex-1">
-                              <View className="flex-row items-center gap-2">
-                                <Text className="text-[15px] font-semibold text-[#111827]">
-                                  {address.name}
+                        return (
+                          <Pressable
+                            key={address.id}
+                            onPress={() => setSelectedAddressId(address.id)}
+                            className={`rounded-[22px] border p-4 ${
+                              isSelected
+                                ? 'border-[#F97316] bg-[#FFF9F5]'
+                                : 'border-[#E5E7EB] bg-white'
+                            }`}>
+                            <View className="flex-row items-start gap-3">
+                              <View
+                                className={`mt-1 h-10 w-10 items-center justify-center rounded-full ${
+                                  isSelected ? 'bg-[#F97316]' : 'bg-[#F3F4F6]'
+                                }`}>
+                                <Ionicons
+                                  name="location-outline"
+                                  size={18}
+                                  color={isSelected ? '#FFFFFF' : '#6B7280'}
+                                />
+                              </View>
+                              <View className="flex-1">
+                                <View className="flex-row items-center gap-2">
+                                  <Text className="text-[15px] font-semibold text-[#111827]">
+                                    {address.name}
+                                  </Text>
+                                  {address.isDefault ? (
+                                    <View className="rounded-full bg-[#DCFCE7] px-2 py-1">
+                                      <Text className="text-[10px] font-semibold text-[#166534]">
+                                        Default
+                                      </Text>
+                                    </View>
+                                  ) : null}
+                                </View>
+                                <Text className="mt-1 text-[13px] leading-[20px] text-[#6B7280]">
+                                  {address.address}
                                 </Text>
-                                {address.isDefault ? (
-                                  <View className="rounded-full bg-[#DCFCE7] px-2 py-1">
-                                    <Text className="text-[10px] font-semibold text-[#166534]">
-                                      Default
-                                    </Text>
-                                  </View>
+                                <Text className="mt-1 text-[13px] text-[#6B7280]">
+                                  {address.city} • {address.phone}
+                                </Text>
+                              </View>
+                              <View
+                                className={`mt-1 h-5 w-5 rounded-full border-2 ${
+                                  isSelected
+                                    ? 'border-[#F97316] bg-[#F97316]'
+                                    : 'border-[#D1D5DB] bg-white'
+                                }`}>
+                                {isSelected ? (
+                                  <View className="m-[3px] h-1.5 w-1.5 rounded-full bg-white" />
                                 ) : null}
                               </View>
-                              <Text className="mt-1 text-[13px] leading-[20px] text-[#6B7280]">
-                                {address.address}
-                              </Text>
-                              <Text className="mt-1 text-[13px] text-[#6B7280]">
-                                {address.city} • {address.phone}
-                              </Text>
                             </View>
-                            <View
-                              className={`mt-1 h-5 w-5 rounded-full border-2 ${
-                                isSelected
-                                  ? 'border-[#F97316] bg-[#F97316]'
-                                  : 'border-[#D1D5DB] bg-white'
-                              }`}>
-                              {isSelected ? (
-                                <View className="m-[3px] h-1.5 w-1.5 rounded-full bg-white" />
-                              ) : null}
-                            </View>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
+                          </Pressable>
+                        );
+                      })
+                    )}
                   </View>
 
                   <Pressable
                     className="mt-4 flex-row items-center justify-between rounded-[20px] bg-[#F8FAFC] px-4 py-3"
-                    onPress={() => router.push('/address')}>
+                    onPress={() => router.push('/addresses')}>
                     <View>
                       <Text className="text-[12px] uppercase tracking-[1.5px] text-[#6B7280]">
                         Manage addresses
@@ -272,7 +326,11 @@ export default function CheckoutScreen() {
                 </View>
 
                 <View className="mt-5">
-                  <Button title="Place Order" onPress={handlePlaceOrder} />
+                  <Button
+                    title={placing ? 'Placing…' : 'Place Order'}
+                    onPress={handlePlaceOrder}
+                    disabled={placing}
+                  />
                 </View>
               </>
             )}
