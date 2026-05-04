@@ -1,16 +1,31 @@
 import { create } from 'zustand';
-import { Product } from '../types/models';
+import type { Product } from '../types/models';
 
 export interface CartItem {
   product: Product;
   quantity: number;
+  variantId: string | null;
+}
+
+function linePrice(product: Product): number {
+  const p = product.price as number | string;
+  if (typeof p === 'number' && Number.isFinite(p)) return p;
+  return parseFloat(String(p ?? 0).replace(/[^0-9.-]+/g, '')) || 0;
+}
+
+function matchesLine(
+  a: { product: Product; variantId: string | null },
+  productId: string,
+  variantId: string | null
+) {
+  return a.product.id === productId && (a.variantId ?? null) === (variantId ?? null);
 }
 
 type CartState = {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  addToCart: (product: Product, quantity?: number, variantId?: string | null) => void;
+  removeFromCart: (productId: string, variantId: string | null) => void;
+  updateQuantity: (productId: string, variantId: string | null, quantity: number) => void;
   clearCart: () => void;
   getCartCount: () => number;
   getCartTotal: () => number;
@@ -18,35 +33,36 @@ type CartState = {
 
 export const useCartStore = create<CartState>((set, get) => ({
   items: [],
-  addToCart: (product, quantity = 1) => {
+  addToCart: (product, quantity = 1, variantId: string | null = null) => {
     const items = get().items.slice();
-    const idx = items.findIndex((i) => i.product.id === product.id);
+    const vid = variantId ?? null;
+    const idx = items.findIndex((i) => matchesLine(i, product.id, vid));
     if (idx >= 0) {
-      items[idx].quantity += quantity;
+      items[idx] = { ...items[idx], quantity: items[idx].quantity + quantity };
     } else {
-      items.push({ product, quantity });
+      items.push({ product, quantity, variantId: vid });
     }
     set({ items });
   },
-  removeFromCart: (productId) => {
-    set((state) => ({ items: state.items.filter((i) => i.product.id !== productId) }));
+  removeFromCart: (productId: string, variantId: string | null) => {
+    const vid = variantId ?? null;
+    set((state) => ({
+      items: state.items.filter((i) => !matchesLine(i, productId, vid)),
+    }));
   },
-  updateQuantity: (productId, quantity) => {
+  updateQuantity: (productId: string, variantId: string | null, quantity: number) => {
+    const vid = variantId ?? null;
     const items = get().items.slice();
-    const idx = items.findIndex((i) => i.product.id === productId);
-    if (idx >= 0) {
-      if (quantity <= 0) items.splice(idx, 1);
-      else items[idx].quantity = quantity;
-      set({ items });
-    }
+    const idx = items.findIndex((i) => matchesLine(i, productId, vid));
+    if (idx < 0) return;
+    if (quantity <= 0) items.splice(idx, 1);
+    else items[idx] = { ...items[idx], quantity };
+    set({ items });
   },
   clearCart: () => set({ items: [] }),
   getCartCount: () => get().items.reduce((s, i) => s + i.quantity, 0),
   getCartTotal: () =>
-    get().items.reduce((s, i) => {
-      const price = parseFloat((i.product.price || '0').replace(/[^0-9.-]+/g, '')) || 0;
-      return s + price * i.quantity;
-    }, 0),
+    get().items.reduce((s, i) => s + linePrice(i.product) * i.quantity, 0),
 }));
 
 export default useCartStore;

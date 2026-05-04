@@ -18,7 +18,8 @@ export interface Product {
   rating: number;
   reviews: number;
   categoryId?: string;
-  discount?: number;
+  discount?: string;
+  compareAtPrice?: number;
   images?: string[];
 }
 

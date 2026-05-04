@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 
 import { formatCurrency } from '~/lib/utils/formatters';
@@ -9,10 +10,12 @@ type Props = {
 };
 
 export function ProductCard({ product }: Props) {
+  const router = useRouter();
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      className="w-[162px] rounded-[10px] bg-[#F8F8F8] p-[6px]">
+      className="w-[162px] rounded-[10px] bg-[#F8F8F8] p-[6px]"
+      onPress={() => router.push(`/product/${encodeURIComponent(product.id)}`)}>
       <Image
         source={{ uri: product.image }}
         className="h-[140px] w-full rounded-[8px]"

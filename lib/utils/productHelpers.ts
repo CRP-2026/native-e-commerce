@@ -1,4 +1,5 @@
-import { Product, ProductVariant } from '../types/models';
+import type { Product } from '../types/models';
+import type { ProductVariant } from '../types/products';
 
 export function getDefaultVariant(product: Product): ProductVariant {
   if (product.variants.length > 0) {

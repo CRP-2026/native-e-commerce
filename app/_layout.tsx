@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { Platform } from 'react-native';
 import { getOnboardingSeen } from '~/lib/onboardingStorage';
+import { hydrateSession } from '~/lib/auth/session';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +21,7 @@ export default function RootLayout() {
       try {
         const onboardingSeen = await getOnboardingSeen();
         setHasSeenOnboarding(onboardingSeen);
+        await hydrateSession();
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (e) {
         console.warn('Error preparing app:', e);

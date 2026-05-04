@@ -1,16 +1,47 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
+
+import { login } from '~/lib/api/auth';
+import { ApiError } from '~/lib/api/errors';
+import { afterAuthLogin } from '~/lib/auth/session';
+
+function getLoginErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'invalid_credentials' || error.status === 401) {
+      return 'Email hoặc mật khẩu không đúng.';
+    }
+    if (error.code === 'validation_error' || error.status === 422) {
+      return 'Dữ liệu đăng nhập không hợp lệ. Vui lòng kiểm tra lại email và mật khẩu.';
+    }
+    return error.message || 'Đăng nhập thất bại.';
+  }
+  return 'Đăng nhập thất bại. Vui lòng thử lại.';
+}
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleLogin = () => {
-    console.log('Login:', { email, password });
+  const handleLogin = async () => {
+    if (!email.trim() || !password) {
+      Alert.alert('Missing fields', 'Nhập email và mật khẩu.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await login(email.trim(), password);
+      await afterAuthLogin(res.access_token);
+      router.replace('/(tabs)');
+    } catch (e) {
+      Alert.alert('Đăng nhập thất bại', getLoginErrorMessage(e));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -34,6 +65,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
               placeholderTextColor="#676767"
             />
           </View>
@@ -69,8 +101,9 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          className="mt-9 h-[55px] items-center justify-center rounded bg-[#F83758]"
-          onPress={handleLogin}>
+          className={`mt-9 h-[55px] items-center justify-center rounded bg-[#F83758] ${submitting ? 'opacity-60' : ''}`}
+          onPress={handleLogin}
+          disabled={submitting}>
           <Text className="text-[24px] font-semibold text-white">Login</Text>
         </TouchableOpacity>
 

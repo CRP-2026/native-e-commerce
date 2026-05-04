@@ -1,21 +1,40 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect } from '@react-navigation/native';
 import { Stack, useRouter } from 'expo-router';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '~/components/Button';
 import { useCart } from '~/features/cart/hooks/useCart';
+import { getAddresses } from '~/features/account/services/addressStorage';
+import type { CartItem } from '~/lib/store/cartStore';
+import { formatCurrency } from '~/lib/utils/formatters';
 
 export default function CartScreen() {
   const router = useRouter();
   const { items, updateQuantity, removeFromCart } = useCart();
+  const [addressPreview, setAddressPreview] = useState('');
 
-  const subtotal = items.reduce((s, i) => {
-    const price = parseFloat((i.product.price || '0').replace(/[^0-9.-]+/g, '')) || 0;
-    return s + price * i.quantity;
-  }, 0);
+  const refreshPreview = useCallback(async () => {
+    try {
+      const list = await getAddresses();
+      const d = list.find((a) => a.isDefault) ?? list[0];
+      setAddressPreview(
+        d ? `${d.address}, ${d.city}` : 'Add a delivery address — Address book hoặc checkout.'
+      );
+    } catch {
+      setAddressPreview('Đăng nhập để tải địa chỉ.');
+    }
+  }, []);
 
-  const shipping = items.length ? 15 : 0;
+  useFocusEffect(
+    useCallback(() => {
+      void refreshPreview();
+    }, [refreshPreview])
+  );
+
+  const subtotal = items.reduce((s, i) => s + Number(i.product.price) * i.quantity, 0);
+  const shipping = items.length ? 30_000 : 0;
   const discount = 0;
   const total = subtotal + shipping - discount;
 
@@ -53,8 +72,8 @@ export default function CartScreen() {
                   <Text className="text-[12px] uppercase tracking-[1.5px] text-[#F97316]">
                     Delivery address
                   </Text>
-                  <Text className="mt-1 text-[14px] font-semibold text-[#1F1F1F]" numberOfLines={1}>
-                    65 Nguyen Trai, Ward 7, District 5, HCMC
+                  <Text className="mt-1 text-[14px] font-semibold text-[#1F1F1F]" numberOfLines={2}>
+                    {addressPreview}
                   </Text>
                 </View>
                 <Pressable onPress={() => router.push('/address')}>
@@ -73,7 +92,7 @@ export default function CartScreen() {
               ) : (
                 items.map((it) => (
                   <CartItemCard
-                    key={it.product.id}
+                    key={`${it.product.id}::${it.variantId ?? ''}`}
                     item={it}
                     onChange={updateQuantity}
                     onRemove={removeFromCart}
@@ -92,17 +111,17 @@ export default function CartScreen() {
             </View>
 
             <View className="mt-4 rounded-[28px] bg-white p-4 shadow-sm">
-              <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
-              <SummaryRow label="Shipping" value={formatMoney(shipping)} />
+              <SummaryRow label="Subtotal" value={formatCurrency(subtotal)} />
+              <SummaryRow label="Shipping" value={formatCurrency(shipping)} />
               <SummaryRow
                 label="Discount"
-                value={`-${formatMoney(discount)}`}
+                value={`-${formatCurrency(discount)}`}
                 valueClass="text-[#12B76A]"
               />
 
               <View className="my-4 h-[1px] bg-[#F1F1F1]" />
 
-              <SummaryRow label="Total" value={formatMoney(total)} total />
+              <SummaryRow label="Total" value={formatCurrency(total)} total />
 
               <View className="mt-4">
                 <Button title="Checkout" onPress={() => router.push('/checkout')} />
@@ -120,10 +139,12 @@ function CartItemCard({
   onChange,
   onRemove,
 }: {
-  item: { product: any; quantity: number };
-  onChange: (id: string, qty: number) => void;
-  onRemove: (id: string) => void;
+  item: CartItem;
+  onChange: (productId: string, variantId: string | null, qty: number) => void;
+  onRemove: (productId: string, variantId: string | null) => void;
 }) {
+  const vid = item.variantId ?? null;
+  const priceNum = Number(item.product.price);
   return (
     <View className="overflow-hidden rounded-[28px] bg-white shadow-sm">
       <View className="flex-row p-3">
@@ -138,25 +159,27 @@ function CartItemCard({
             <View className="flex-row items-start justify-between gap-3">
               <View className="flex-1">
                 <Text className="text-[16px] font-semibold text-[#1F1F1F]" numberOfLines={2}>
-                  {item.product.title}
+                  {item.product.name}
                 </Text>
                 <Text className="mt-1 text-[12px] leading-[16px] text-[#7A7A7A]" numberOfLines={2}>
-                  {item.product.subtitle}
+                  {item.product.description}
                 </Text>
               </View>
 
               <Pressable
                 className="h-9 w-9 items-center justify-center rounded-full bg-[#FFF4ED]"
-                onPress={() => onRemove(item.product.id)}>
+                onPress={() => onRemove(item.product.id, vid)}>
                 <Ionicons name="trash-outline" size={18} color="#F97316" />
               </Pressable>
             </View>
 
             <View className="mt-3 flex-row items-center gap-2">
-              <Text className="text-[17px] font-bold text-[#1F1F1F]">{item.product.price}</Text>
-              {item.product.oldPrice ? (
+              <Text className="text-[17px] font-bold text-[#1F1F1F]">
+                {formatCurrency(priceNum)}
+              </Text>
+              {item.product.compareAtPrice != null ? (
                 <Text className="text-[12px] text-[#A0A0A0] line-through">
-                  {item.product.oldPrice}
+                  {formatCurrency(item.product.compareAtPrice)}
                 </Text>
               ) : null}
               {item.product.discount ? (
@@ -171,7 +194,9 @@ function CartItemCard({
             <View className="flex-row items-center rounded-full bg-[#FFF4ED] p-1">
               <QuantityButton
                 label="-"
-                onPress={() => onChange(item.product.id, Math.max(0, item.quantity - 1))}
+                onPress={() =>
+                  onChange(item.product.id, vid, Math.max(0, item.quantity - 1))
+                }
               />
               <Text className="min-w-[34px] text-center text-[14px] font-semibold text-[#1F1F1F]">
                 {item.quantity}
@@ -179,7 +204,7 @@ function CartItemCard({
               <QuantityButton
                 label="+"
                 filled
-                onPress={() => onChange(item.product.id, item.quantity + 1)}
+                onPress={() => onChange(item.product.id, vid, item.quantity + 1)}
               />
             </View>
 
@@ -240,8 +265,4 @@ function SummaryRow({
       </Text>
     </View>
   );
-}
-
-function formatMoney(value: number) {
-  return `$${value.toFixed(2)}`;
 }

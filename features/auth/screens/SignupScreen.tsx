@@ -1,18 +1,67 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
+import { register } from '~/lib/api/auth';
+import { ApiError } from '~/lib/api/errors';
+import { afterAuthLogin } from '~/lib/auth/session';
+
+function getSignupErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.code === 'email_exists' || error.status === 409) {
+      return 'Email này đã được đăng ký.';
+    }
+    if (error.code === 'validation_error' || error.status === 422) {
+      return 'Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại các trường.';
+    }
+    return error.message || 'Đăng ký thất bại.';
+  }
+  return 'Đăng ký thất bại. Vui lòng thử lại.';
+}
+
 export default function SignupScreen() {
   const router = useRouter();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignup = () => {
-    console.log('Sign Up:', { email, password, confirmPassword });
+  const handleSignup = async () => {
+    if (!name.trim()) {
+      Alert.alert('Missing', 'Nhập họ tên.');
+      return;
+    }
+    if (!email.trim()) {
+      Alert.alert('Missing', 'Nhập email.');
+      return;
+    }
+    if (password.length < 6) {
+      Alert.alert('Invalid password', 'Mật khẩu tối thiểu 6 ký tự.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Mismatch', 'Mật khẩu xác nhận không khớp.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await register(name.trim(), email.trim(), password);
+      await afterAuthLogin(res.access_token);
+      Alert.alert('Đăng ký thành công', 'Tài khoản đã được tạo. Bạn đã được đăng nhập.', [
+        {
+          text: 'OK',
+          onPress: () => router.replace('/(tabs)'),
+        },
+      ]);
+    } catch (e) {
+      Alert.alert('Đăng ký thất bại', getSignupErrorMessage(e));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -32,10 +81,27 @@ export default function SignupScreen() {
             />
             <TextInput
               className="flex-1 text-xs font-medium text-[#676767]"
-              placeholder="Username or Email"
+              placeholder="Full name"
+              value={name}
+              onChangeText={setName}
+              placeholderTextColor="#676767"
+            />
+          </View>
+
+          <View className="h-[55px] flex-row items-center rounded-[10px] border border-[#A8A8A9] bg-[#F3F3F3] px-3">
+            <FontAwesome
+              name="envelope"
+              size={16}
+              color="#676767"
+              style={{ marginRight: 10, width: 20, textAlign: 'center' }}
+            />
+            <TextInput
+              className="flex-1 text-xs font-medium text-[#676767]"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
               placeholderTextColor="#676767"
             />
           </View>
@@ -73,7 +139,7 @@ export default function SignupScreen() {
             />
             <TextInput
               className="flex-1 text-xs font-medium text-[#676767]"
-              placeholder="ConfirmPassword"
+              placeholder="Confirm password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPassword}
@@ -95,8 +161,9 @@ export default function SignupScreen() {
         </Text>
 
         <TouchableOpacity
-          className="mt-7 h-[55px] items-center justify-center rounded bg-[#F83758]"
-          onPress={handleSignup}>
+          className={`mt-7 h-[55px] items-center justify-center rounded bg-[#F83758] ${submitting ? 'opacity-60' : ''}`}
+          onPress={handleSignup}
+          disabled={submitting}>
           <Text className="text-[20px] font-semibold text-white">Create Account</Text>
         </TouchableOpacity>
 

@@ -33,7 +33,7 @@ const FLOW_ROUTES: TestRouteItem[] = [
 
 const DETAIL_ROUTES: TestRouteItem[] = [
   { label: 'Product Detail (sample)', path: '/product/jewelry-set-01' },
-  { label: 'Order Detail (sample)', path: '/order/ORD-1001' },
+  { label: 'Orders list', path: '/(tabs)/order' },
   { label: 'Edit Profile', path: '/account/edit' },
   { label: 'Addresses', path: '/addresses' },
 ];
