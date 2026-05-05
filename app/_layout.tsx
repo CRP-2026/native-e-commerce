@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Platform } from 'react-native';
 import { getOnboardingSeen } from '~/lib/onboardingStorage';
 import { hydrateSession } from '~/lib/auth/session';
+import { ToastProvider } from '~/components/ToastProvider';
 import '../global.css';
 
 SplashScreen.preventAutoHideAsync();
@@ -12,7 +13,18 @@ export const unstable_settings = {
   initialRouteName: '(tabs)',
 };
 
-export default function RootLayout() {
+function RootStack({ hasSeenOnboarding }: { hasSeenOnboarding: boolean }) {
+  return (
+    <Stack initialRouteName={hasSeenOnboarding ? '(tabs)' : 'onboarding'}>
+      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+    </Stack>
+  );
+}
+
+function RootLayout() {
   const [isBootstrapped, setIsBootstrapped] = useState(false);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true);
 
@@ -42,12 +54,13 @@ export default function RootLayout() {
 
   if (!isBootstrapped) return null;
 
+  return <RootStack hasSeenOnboarding={hasSeenOnboarding} />;
+}
+
+export default function App() {
   return (
-    <Stack initialRouteName={hasSeenOnboarding ? '(tabs)' : 'onboarding'}>
-      <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-    </Stack>
+    <ToastProvider>
+      <RootLayout />
+    </ToastProvider>
   );
 }

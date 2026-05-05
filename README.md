@@ -25,14 +25,18 @@ FE đọc env qua `lib/config/env.ts`:
 - `EXPO_PUBLIC_API_URL` (default `http://127.0.0.1:8000/api/v1`)
 - `EXPO_PUBLIC_STORE_ID` (default `1`)
 
-Ví dụ:
+Tạo file `.env` từ `.env.example` rồi sửa giá trị cho đúng máy bạn:
 
 ```env
-EXPO_PUBLIC_API_URL=http://127.0.0.1:8000/api/v1
+EXPO_PUBLIC_API_URL=http://192.168.1.10:8000/api/v1
 EXPO_PUBLIC_STORE_ID=1
 ```
 
 > Android emulator thường dùng `http://10.0.2.2:8000/api/v1`.
+>
+> iPhone simulator trên macOS thường dùng `http://localhost:8000/api/v1`.
+>
+> iPhone/Android thật cần IP LAN của máy chạy backend.
 
 ## API Integration Status
 
@@ -95,7 +99,7 @@ EXPO_PUBLIC_STORE_ID=1
 
 - Bổ sung test e2e đầy đủ cho flow login -> address CRUD -> checkout -> orders.
 - Mở rộng i18n cho toàn bộ copy UI còn lại.
-- Chuẩn hóa migration strategy (manual SQL vs Alembic) theo team decision.
+- Chuẩn hóa migration strategy manual SQL theo team decision.
 
 ## Quick Checks
 
@@ -104,4 +108,3 @@ npx tsc --noEmit
 npm run lint
 npm run smoke:api
 ```
-

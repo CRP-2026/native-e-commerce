@@ -81,7 +81,7 @@ export default function HomeScreen() {
       <Stack.Screen options={{ title: 'Home', headerShown: false }} />
 
       <ScrollView className="flex-1 bg-[#F4F4F4]" showsVerticalScrollIndicator={false}>
-        <View className="px-4 pb-8 pt-3">
+        <View className="mt-4 px-4 pb-8 pt-3">
           <HomeHeader />
 
           <View className="mt-4 flex-row items-center justify-between">
