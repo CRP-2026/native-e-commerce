@@ -4,23 +4,12 @@ import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
 import { register } from '~/lib/api/auth';
-import { ApiError } from '~/lib/api/errors';
 import { afterAuthLogin } from '~/lib/auth/session';
-
-function getSignupErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.code === 'email_exists' || error.status === 409) {
-      return 'Email này đã được đăng ký.';
-    }
-    if (error.code === 'validation_error' || error.status === 422) {
-      return 'Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại các trường.';
-    }
-    return error.message || 'Đăng ký thất bại.';
-  }
-  return 'Đăng ký thất bại. Vui lòng thử lại.';
-}
+import { getAppLocale, resolveSignupError, strings } from '~/lib/i18n';
 
 export default function SignupScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -32,33 +21,33 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!name.trim()) {
-      Alert.alert('Missing', 'Nhập họ tên.');
+      Alert.alert(L.errors.missingFields, L.errors.signupMissingName);
       return;
     }
     if (!email.trim()) {
-      Alert.alert('Missing', 'Nhập email.');
+      Alert.alert(L.errors.missingFields, L.errors.signupMissingEmail);
       return;
     }
     if (password.length < 6) {
-      Alert.alert('Invalid password', 'Mật khẩu tối thiểu 6 ký tự.');
+      Alert.alert(L.errors.missingFields, L.errors.signupBadPassword);
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert('Mismatch', 'Mật khẩu xác nhận không khớp.');
+      Alert.alert(L.errors.missingFields, L.errors.signupPasswordMismatch);
       return;
     }
     setSubmitting(true);
     try {
       const res = await register(name.trim(), email.trim(), password);
       await afterAuthLogin(res.access_token);
-      Alert.alert('Đăng ký thành công', 'Tài khoản đã được tạo. Bạn đã được đăng nhập.', [
+      Alert.alert(L.errors.signupSuccessTitle, L.errors.signupSuccessBody, [
         {
-          text: 'OK',
+          text: L.common.ok,
           onPress: () => router.replace('/(tabs)'),
         },
       ]);
     } catch (e) {
-      Alert.alert('Đăng ký thất bại', getSignupErrorMessage(e));
+      Alert.alert(L.errors.signupFailed, resolveSignupError(e, locale));
     } finally {
       setSubmitting(false);
     }

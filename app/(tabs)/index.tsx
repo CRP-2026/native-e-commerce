@@ -18,6 +18,7 @@ import { ProductCard } from '../../components/home/ProductCard';
 import { SectionBadge } from '../../components/home/SectionBadge';
 import { fetchCategories, fetchProducts } from '~/lib/api/catalog';
 import { ApiError } from '~/lib/api/errors';
+import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
 import type { Category } from '../../lib/types/models';
 import type { ProductSummary } from '../../lib/types/products';
 
@@ -41,6 +42,9 @@ function ProductCarousel({ products }: { products: ProductSummary[] }) {
 }
 
 export default function HomeScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
+
   const [homeCategories, setHomeCategories] = useState<Category[]>([]);
   const [homeProducts, setHomeProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,15 +63,14 @@ export default function HomeScreen() {
       );
       setHomeProducts(prods);
     } catch (e) {
-      const msg =
-        e instanceof ApiError ? e.message : 'Không tải được danh mục hoặc sản phẩm. Kiểm tra API.';
+      const msg = e instanceof ApiError ? resolveApiError(e, locale) : L.errors.homeLoadFailed;
       setError(msg);
       setHomeCategories([]);
       setHomeProducts([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     void load();

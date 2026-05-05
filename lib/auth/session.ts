@@ -1,4 +1,5 @@
 import { setAddressBackend, resetAddressBackend } from '~/features/account/services/addressStorage';
+import { logoutRemote } from '~/lib/api/auth';
 import { createHttpAddressBackend } from '~/lib/api/httpAddressBackend';
 import { setAccessToken, getAccessToken } from '~/lib/api/token';
 
@@ -16,6 +17,12 @@ export async function afterAuthLogin(accessToken: string): Promise<void> {
 }
 
 export async function logoutSession(): Promise<void> {
+  try {
+    const token = await getAccessToken();
+    if (token) await logoutRemote();
+  } catch {
+    /* still clear client session */
+  }
   await setAccessToken(null);
   resetAddressBackend();
 }

@@ -4,23 +4,13 @@ import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
 import { login } from '~/lib/api/auth';
-import { ApiError } from '~/lib/api/errors';
 import { afterAuthLogin } from '~/lib/auth/session';
-
-function getLoginErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) {
-    if (error.code === 'invalid_credentials' || error.status === 401) {
-      return 'Email hoặc mật khẩu không đúng.';
-    }
-    if (error.code === 'validation_error' || error.status === 422) {
-      return 'Dữ liệu đăng nhập không hợp lệ. Vui lòng kiểm tra lại email và mật khẩu.';
-    }
-    return error.message || 'Đăng nhập thất bại.';
-  }
-  return 'Đăng nhập thất bại. Vui lòng thử lại.';
-}
+import { getAppLocale, resolveLoginError, strings } from '~/lib/i18n';
 
 export default function LoginScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,7 +19,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert('Missing fields', 'Nhập email và mật khẩu.');
+      Alert.alert(L.errors.missingFields, L.errors.enterEmailPassword);
       return;
     }
     setSubmitting(true);
@@ -38,7 +28,7 @@ export default function LoginScreen() {
       await afterAuthLogin(res.access_token);
       router.replace('/(tabs)');
     } catch (e) {
-      Alert.alert('Đăng nhập thất bại', getLoginErrorMessage(e));
+      Alert.alert(L.errors.loginFailed, resolveLoginError(e, locale));
     } finally {
       setSubmitting(false);
     }

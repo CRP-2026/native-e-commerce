@@ -10,10 +10,18 @@ export async function login(email: string, password: string): Promise<TokenRespo
   );
 }
 
-export async function register(name: string, email: string, password: string): Promise<TokenResponse> {
+export async function register(
+  name: string,
+  email: string,
+  password: string
+): Promise<TokenResponse> {
   return apiPost<TokenResponse>(
     'auth/register',
     { name: name.trim(), email: email.trim(), password },
     { skipAuth: true }
   );
+}
+
+export async function logoutRemote(): Promise<void> {
+  await apiPost<Record<string, unknown>>('auth/logout', {});
 }
