@@ -12,6 +12,7 @@ import {
 
 import { ApiError } from '~/lib/api/errors';
 import { fetchOrderDetail } from '~/lib/api/orders';
+import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
 import type { OrderDetail, OrderStatus } from '~/lib/types/orders';
 import { formatCurrency, formatDate } from '~/lib/utils/formatters';
 
@@ -33,6 +34,8 @@ function getStatusColor(status: OrderStatus) {
 }
 
 export default function OrderDetailScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const resolvedId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -54,11 +57,13 @@ export default function OrderDetailScreen() {
       setOrder(o);
     } catch (e) {
       setOrder(null);
-      setError(e instanceof ApiError ? e.message : 'Could not load order.');
+      setError(
+        e instanceof ApiError ? resolveApiError(e, locale) : L.errors.orderLoadFailed
+      );
     } finally {
       setLoading(false);
     }
-  }, [resolvedId]);
+  }, [resolvedId, locale, L.errors.orderLoadFailed]);
 
   useEffect(() => {
     void load();
@@ -87,12 +92,12 @@ export default function OrderDetailScreen() {
       <>
         <Stack.Screen options={{ title: 'Order Details' }} />
         <View style={styles.notFoundContainer}>
-          <Text style={styles.notFoundTitle}>Order not found</Text>
+          <Text style={styles.notFoundTitle}>{L.orders.detailNotFoundTitle}</Text>
           <Text style={styles.notFoundSubtitle}>
-            {error ?? 'Please check your order id and try again.'}
+            {error ?? L.orders.detailNotFoundHint}
           </Text>
           <TouchableOpacity style={styles.primaryButton} onPress={() => router.back()}>
-            <Text style={styles.primaryButtonText}>Go Back</Text>
+            <Text style={styles.primaryButtonText}>{L.orders.detailGoBack}</Text>
           </TouchableOpacity>
         </View>
       </>

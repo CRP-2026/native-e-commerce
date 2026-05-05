@@ -7,12 +7,15 @@ import { Button } from '~/components/Button';
 import { useCart } from '~/features/cart/hooks/useCart';
 import { fetchProductById } from '~/lib/api/catalog';
 import { ApiError } from '~/lib/api/errors';
+import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
 import type { ProductDetail } from '~/lib/types/products';
 import type { Product } from '~/lib/types/models';
 import { getDefaultVariant, getVariantById } from '~/lib/utils/productHelpers';
 import { formatCurrency } from '~/lib/utils/formatters';
 
 export default function ProductDetailScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
   const { addToCart } = useCart();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const resolvedProductId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -40,13 +43,13 @@ export default function ProductDetailScreen() {
       setSelectedVariantId(def.id);
       setQuantity(1);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : 'Không tải được sản phẩm.';
+      const msg = e instanceof ApiError ? resolveApiError(e, locale) : L.errors.productLoadFailed;
       setLoadError(msg);
       setProduct(null);
     } finally {
       setLoading(false);
     }
-  }, [productId]);
+  }, [productId, locale, L.errors.productLoadFailed]);
 
   useEffect(() => {
     void load();

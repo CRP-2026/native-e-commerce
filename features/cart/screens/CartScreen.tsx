@@ -9,23 +9,25 @@ import { useCart } from '~/features/cart/hooks/useCart';
 import { getAddresses } from '~/features/account/services/addressStorage';
 import type { CartItem } from '~/lib/store/cartStore';
 import { formatCurrency } from '~/lib/utils/formatters';
+import { getAppLocale, strings } from '~/lib/i18n';
 
 export default function CartScreen() {
   const router = useRouter();
+  const locale = getAppLocale();
+  const L = strings(locale);
   const { items, updateQuantity, removeFromCart } = useCart();
   const [addressPreview, setAddressPreview] = useState('');
 
   const refreshPreview = useCallback(async () => {
+    const S = strings(locale);
     try {
       const list = await getAddresses();
       const d = list.find((a) => a.isDefault) ?? list[0];
-      setAddressPreview(
-        d ? `${d.address}, ${d.city}` : 'Add a delivery address — Address book hoặc checkout.'
-      );
+      setAddressPreview(d ? `${d.address}, ${d.city}` : S.cart.addressBookPrompt);
     } catch {
-      setAddressPreview('Đăng nhập để tải địa chỉ.');
+      setAddressPreview(S.cart.addressLoginPrompt);
     }
-  }, []);
+  }, [locale]);
 
   useFocusEffect(
     useCallback(() => {
@@ -85,9 +87,15 @@ export default function CartScreen() {
             <View className="mt-4 gap-4">
               {items.length === 0 ? (
                 <View className="rounded-[20px] bg-white p-6 shadow-sm">
-                  <Text className="text-center text-[14px] text-[#7A7A7A]">
-                    Your cart is empty.
-                  </Text>
+                  <Text className="text-center text-[14px] text-[#7A7A7A]">{L.empty.cartTitle}</Text>
+                  <Text className="mt-2 text-center text-[13px] text-[#9CA3AF]">{L.empty.cartHint}</Text>
+                  <View className="mt-4 items-center">
+                    <Pressable
+                      className="rounded-full bg-[#F97316] px-5 py-2.5"
+                      onPress={() => router.push('/(tabs)')}>
+                      <Text className="text-[13px] font-semibold text-white">{L.empty.cartContinue}</Text>
+                    </Pressable>
+                  </View>
                 </View>
               ) : (
                 items.map((it) => (

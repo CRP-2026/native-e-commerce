@@ -7,9 +7,9 @@ import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { Button } from '~/components/Button';
 import { useCart } from '~/features/cart/hooks/useCart';
 import { getAddresses } from '~/features/account/services/addressStorage';
-import { ApiError } from '~/lib/api/errors';
 import { getAccessToken } from '~/lib/api/token';
 import { placeOrder } from '~/lib/api/orders';
+import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
 import type { Address } from '~/lib/types/models';
 import { variantIdForOrderApi } from '~/lib/utils/variant';
 import { formatCurrency } from '~/lib/utils/formatters';
@@ -39,6 +39,8 @@ const SHIPPING_FEE_VND = 30_000;
 
 export default function CheckoutScreen() {
   const router = useRouter();
+  const locale = getAppLocale();
+  const L = strings(locale);
   const { items, clearCart } = useCart();
   const [shippingAddresses, setShippingAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
@@ -89,15 +91,15 @@ export default function CheckoutScreen() {
   const handlePlaceOrder = async () => {
     const token = await getAccessToken();
     if (!token) {
-      Alert.alert('Cần đăng nhập', 'Đăng nhập để đặt hàng và gắn địa chỉ.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Login', onPress: () => router.push('/(auth)/login') },
+      Alert.alert(L.errors.checkoutNeedLoginTitle, L.errors.checkoutNeedLoginBody, [
+        { text: L.common.cancel, style: 'cancel' },
+        { text: L.common.login, onPress: () => router.push('/(auth)/login') },
       ]);
       return;
     }
     if (!selectedAddress) {
-      Alert.alert('Địa chỉ', 'Thêm địa chỉ giao hàng trước.', [
-        { text: 'OK', onPress: () => router.push('/addresses/new') },
+      Alert.alert(L.errors.checkoutNeedAddressTitle, L.errors.checkoutNeedAddressBody, [
+        { text: L.common.ok, onPress: () => router.push('/addresses/new') },
       ]);
       return;
     }
@@ -119,8 +121,8 @@ export default function CheckoutScreen() {
       clearCart();
       router.replace(`/order/${encodeURIComponent(created.id)}`);
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : 'Đặt hàng thất bại.';
-      Alert.alert('Order failed', msg);
+      const msg = resolveApiError(e, locale);
+      Alert.alert(L.errors.orderFailed, msg);
     } finally {
       setPlacing(false);
     }
@@ -145,9 +147,9 @@ export default function CheckoutScreen() {
 
             {items.length === 0 ? (
               <View className="mt-5 rounded-[28px] bg-white p-6 shadow-sm">
-                <Text className="text-center text-[15px] text-[#6B7280]">Your cart is empty.</Text>
+                <Text className="text-center text-[15px] text-[#6B7280]">{L.empty.checkoutCart}</Text>
                 <View className="mt-4">
-                  <Button title="Back to Shop" onPress={() => router.replace('/(tabs)')} />
+                  <Button title={L.empty.checkoutBackShop} onPress={() => router.replace('/(tabs)')} />
                 </View>
               </View>
             ) : (

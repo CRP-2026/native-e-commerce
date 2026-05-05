@@ -6,19 +6,11 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { ApiError } from '~/lib/api/errors';
 import { fetchOrderSummaries } from '~/lib/api/orders';
+import { getAppLocale, strings } from '~/lib/i18n';
 import type { OrderStatus, OrderSummary } from '~/lib/types/orders';
 import { formatCurrency, formatDate } from '~/lib/utils/formatters';
 
 type OrderFilter = 'all' | OrderStatus;
-
-const statusFilters: { label: string; value: OrderFilter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Processing', value: 'processing' },
-  { label: 'Shipped', value: 'shipped' },
-  { label: 'Delivered', value: 'delivered' },
-  { label: 'Cancelled', value: 'cancelled' },
-];
 
 function statusBadge(status: OrderStatus) {
   switch (status) {
@@ -39,6 +31,20 @@ function statusBadge(status: OrderStatus) {
 
 export default function OrdersScreen() {
   const router = useRouter();
+  const locale = getAppLocale();
+  const L = strings(locale);
+  const statusFilters = useMemo((): { label: string; value: OrderFilter }[] => {
+    const o = strings(locale).orders;
+    return [
+      { label: o.filterAll, value: 'all' },
+      { label: o.filterPending, value: 'pending' },
+      { label: o.filterProcessing, value: 'processing' },
+      { label: o.filterShipped, value: 'shipped' },
+      { label: o.filterDelivered, value: 'delivered' },
+      { label: o.filterCancelled, value: 'cancelled' },
+    ];
+  }, [locale]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<OrderFilter>('all');
   const [orders, setOrders] = useState<OrderSummary[]>([]);
@@ -86,13 +92,11 @@ export default function OrdersScreen() {
 
             {needLogin ? (
               <View className="mt-4 rounded-[20px] bg-[#FEF3C7] p-4">
-                <Text className="text-[14px] text-[#92400E]">
-                  Đăng nhập để xem đơn hàng của bạn.
-                </Text>
+                <Text className="text-[14px] text-[#92400E]">{L.orders.loginBanner}</Text>
                 <Pressable
                   className="mt-3 self-start rounded-full bg-[#2563EB] px-4 py-2"
                   onPress={() => router.push('/(auth)/login')}>
-                  <Text className="text-[13px] font-semibold text-white">Login</Text>
+                  <Text className="text-[13px] font-semibold text-white">{L.orders.loginCta}</Text>
                 </Pressable>
               </View>
             ) : null}
@@ -135,15 +139,15 @@ export default function OrdersScreen() {
                   <Ionicons name="file-tray-outline" size={24} color="#2563EB" />
                 </View>
                 <Text className="mt-4 text-[17px] font-semibold text-[#0F172A]">
-                  No orders found
+                  {L.empty.ordersTitle}
                 </Text>
                 <Text className="mt-2 text-center text-[14px] leading-[20px] text-[#64748B]">
-                  You have no orders in this status yet.
+                  {L.empty.ordersHint}
                 </Text>
                 <Pressable
                   className="mt-5 rounded-full bg-[#2563EB] px-5 py-3"
                   onPress={() => router.push('/(tabs)')}>
-                  <Text className="text-[14px] font-semibold text-white">Back to Shop</Text>
+                  <Text className="text-[14px] font-semibold text-white">{L.empty.ordersBackShop}</Text>
                 </Pressable>
               </View>
             ) : (
