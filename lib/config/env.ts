@@ -1,6 +1,13 @@
-const raw = (process.env.EXPO_PUBLIC_API_URL ?? 'http://127.0.0.1:8000/api/v1').replace(/\/$/, '');
+function requireEnv(name: 'EXPO_PUBLIC_API_URL' | 'EXPO_PUBLIC_STORE_ID') {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+const raw = requireEnv('EXPO_PUBLIC_API_URL').replace(/\/$/, '');
 
 export const API_BASE_URL = raw;
 
-const storeRaw = process.env.EXPO_PUBLIC_STORE_ID ?? '1';
-export const STORE_ID = /^\d+$/.test(storeRaw) ? storeRaw : '1';
+export const STORE_ID = requireEnv('EXPO_PUBLIC_STORE_ID');

@@ -1,17 +1,8 @@
-import { useFocusEffect } from '@react-navigation/native';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { fetchCurrentUser } from '~/lib/api/users';
 import { ApiError } from '~/lib/api/errors';
@@ -19,8 +10,10 @@ import { logoutSession } from '~/lib/auth/session';
 import { getAccessToken } from '~/lib/api/token';
 import { getAppLocale, resolveApiError, roleLabel, strings } from '~/lib/i18n';
 import type { CurrentUser } from '~/lib/types/user';
+import { useToast } from '~/components/ToastProvider';
 
 export default function AccountScreen() {
+  const { addToast } = useToast();
   const router = useRouter();
   const locale = getAppLocale();
   const L = strings(locale);
@@ -30,6 +23,7 @@ export default function AccountScreen() {
   const [error, setError] = useState<string | null>(null);
   const [needLogin, setNeedLogin] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -64,27 +58,24 @@ export default function AccountScreen() {
   );
 
   const confirmLogout = () => {
-    Alert.alert(L.account.logoutConfirmTitle, L.account.logoutConfirmBody, [
-      { text: L.common.cancel, style: 'cancel' },
-      {
-        text: L.account.logout,
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            setLoggingOut(true);
-            try {
-              await logoutSession();
-              router.replace('/(auth)/login');
-            } catch {
-              Alert.alert(L.errors.logoutFailedTitle, L.errors.logoutFailedBody);
-              router.replace('/(auth)/login');
-            } finally {
-              setLoggingOut(false);
-            }
-          })();
-        },
-      },
-    ]);
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirmed = () => {
+    setShowLogoutConfirm(false);
+    void (async () => {
+      setLoggingOut(true);
+      try {
+        await logoutSession();
+        addToast('success', L.common.success, L.account.logout);
+        router.replace('/(auth)/login');
+      } catch {
+        addToast('error', L.errors.logoutFailedTitle, L.errors.logoutFailedBody);
+        router.replace('/(auth)/login');
+      } finally {
+        setLoggingOut(false);
+      }
+    })();
   };
 
   return (
@@ -122,11 +113,7 @@ export default function AccountScreen() {
               <View className="items-center">
                 <View className="h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gray-200">
                   {user.avatar ? (
-                    <Image
-                      source={{ uri: user.avatar }}
-                      className="h-24 w-24"
-                      resizeMode="cover"
-                    />
+                    <Image source={{ uri: user.avatar }} className="h-24 w-24" resizeMode="cover" />
                   ) : (
                     <Ionicons name="person" size={48} color="#9ca3af" />
                   )}
@@ -140,7 +127,9 @@ export default function AccountScreen() {
                 <Text className="text-sm text-gray-500">{user.email}</Text>
                 {!user.is_active ? (
                   <View className="mt-3 rounded-lg bg-red-50 px-3 py-2">
-                    <Text className="text-center text-xs text-red-800">{L.account.inactiveBanner}</Text>
+                    <Text className="text-center text-xs text-red-800">
+                      {L.account.inactiveBanner}
+                    </Text>
                   </View>
                 ) : (
                   <Text className="mt-2 text-xs text-gray-400">{L.account.setupPrompt}</Text>
@@ -157,11 +146,7 @@ export default function AccountScreen() {
                 <Separator />
                 <Row label={L.account.rowEmail} value={user.email} />
                 <Separator />
-                <Row
-                  label={L.account.rowPhone}
-                  value={user.phone ?? '—'}
-                  muted={!user.phone}
-                />
+                <Row label={L.account.rowPhone} value={user.phone ?? '—'} muted={!user.phone} />
                 <Separator />
                 <Row
                   label={L.account.rowBio}
@@ -190,6 +175,29 @@ export default function AccountScreen() {
           </>
         ) : null}
       </ScrollView>
+
+      {showLogoutConfirm ? (
+        <View className="absolute inset-0 z-50 items-center justify-center bg-black/35 px-6">
+          <View className="w-full max-w-[420px]  border border-[#FFE4D6] bg-white p-5 shadow-xl">
+            <Text className="text-[19px] font-bold text-[#1F2937]">{L.account.logoutConfirmTitle}</Text>
+            <Text className="mt-2 text-[14px] leading-[21px] text-[#6B7280]">
+              {L.account.logoutConfirmBody}
+            </Text>
+            <View className="mt-5 flex-row gap-3">
+              <Pressable
+                onPress={() => setShowLogoutConfirm(false)}
+                className="flex-1 items-center rounded-[18px] border border-[#FED7AA] py-3">
+                <Text className="text-[14px] font-semibold text-[#9A3412]">{L.common.cancel}</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleLogoutConfirmed}
+                className="flex-1 items-center rounded-[18px] border border-[#FECACA] bg-[#FEF2F2] py-3">
+                <Text className="text-[14px] font-semibold text-[#B91C1C]">{L.account.logout}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      ) : null}
     </>
   );
 }

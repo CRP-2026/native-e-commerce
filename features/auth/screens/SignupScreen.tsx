@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
 import { register } from '~/lib/api/auth';
 import { afterAuthLogin } from '~/lib/auth/session';
 import { getAppLocale, resolveSignupError, strings } from '~/lib/i18n';
+import { useToast } from '~/components/ToastProvider';
 
 export default function SignupScreen() {
   const locale = getAppLocale();
   const L = strings(locale);
   const router = useRouter();
+  const { addToast } = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,33 +23,29 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!name.trim()) {
-      Alert.alert(L.errors.missingFields, L.errors.signupMissingName);
+      addToast('warning', L.errors.missingFields, L.errors.signupMissingName);
       return;
     }
     if (!email.trim()) {
-      Alert.alert(L.errors.missingFields, L.errors.signupMissingEmail);
+      addToast('warning', L.errors.missingFields, L.errors.signupMissingEmail);
       return;
     }
     if (password.length < 6) {
-      Alert.alert(L.errors.missingFields, L.errors.signupBadPassword);
+      addToast('warning', L.errors.missingFields, L.errors.signupBadPassword);
       return;
     }
     if (password !== confirmPassword) {
-      Alert.alert(L.errors.missingFields, L.errors.signupPasswordMismatch);
+      addToast('warning', L.errors.missingFields, L.errors.signupPasswordMismatch);
       return;
     }
     setSubmitting(true);
     try {
       const res = await register(name.trim(), email.trim(), password);
       await afterAuthLogin(res.access_token);
-      Alert.alert(L.errors.signupSuccessTitle, L.errors.signupSuccessBody, [
-        {
-          text: L.common.ok,
-          onPress: () => router.replace('/(tabs)'),
-        },
-      ]);
+      addToast('success', L.errors.signupSuccessTitle, L.errors.signupSuccessBody);
+      setTimeout(() => router.replace('/(tabs)'), 1500);
     } catch (e) {
-      Alert.alert(L.errors.signupFailed, resolveSignupError(e, locale));
+      addToast('error', L.errors.signupFailed, resolveSignupError(e, locale));
     } finally {
       setSubmitting(false);
     }

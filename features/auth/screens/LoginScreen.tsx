@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
@@ -6,10 +6,12 @@ import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { login } from '~/lib/api/auth';
 import { afterAuthLogin } from '~/lib/auth/session';
 import { getAppLocale, resolveLoginError, strings } from '~/lib/i18n';
+import { useToast } from '~/components/ToastProvider';
 
 export default function LoginScreen() {
   const locale = getAppLocale();
   const L = strings(locale);
+  const { addToast } = useToast();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -19,7 +21,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      Alert.alert(L.errors.missingFields, L.errors.enterEmailPassword);
+      addToast('warning', L.errors.missingFields, L.errors.enterEmailPassword);
       return;
     }
     setSubmitting(true);
@@ -28,7 +30,7 @@ export default function LoginScreen() {
       await afterAuthLogin(res.access_token);
       router.replace('/(tabs)');
     } catch (e) {
-      Alert.alert(L.errors.loginFailed, resolveLoginError(e, locale));
+      addToast('error', L.errors.loginFailed, resolveLoginError(e, locale));
     } finally {
       setSubmitting(false);
     }

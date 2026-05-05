@@ -4,6 +4,8 @@ import { getAccessToken } from '~/lib/api/token';
 
 type Json = Record<string, unknown> | unknown[] | string | number | boolean | null;
 
+const API_TIMEOUT_MS = 15000;
+
 function joinUrl(path: string): string {
   const p = path.startsWith('/') ? path.slice(1) : path;
   return `${API_BASE_URL}/${p}`;
@@ -36,7 +38,20 @@ export async function apiFetch<T = Json>(
   }
 
   const url = joinUrl(path);
-  const res = await fetch(url, { ...rest, headers });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+
+  let res: Response;
+  try {
+    res = await fetch(url, { ...rest, headers, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new ApiError('network_timeout', 'API request timed out', 0);
+    }
+    throw new ApiError('network_error', 'Unable to reach API server', 0);
+  } finally {
+    clearTimeout(timeout);
+  }
   const body = await parseBody(res);
 
   if (!res.ok) {

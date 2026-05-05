@@ -4,6 +4,8 @@ type Sheet = {
   common: {
     ok: string;
     cancel: string;
+    delete: string;
+    success: string;
     retry: string;
     login: string;
     error: string;
@@ -41,6 +43,8 @@ type Sheet = {
     logoutFailedBody: string;
     signupSuccessTitle: string;
     signupSuccessBody: string;
+    checkoutConfirmTitle: string;
+    checkoutConfirmPlace: string;
   };
   empty: {
     cartTitle: string;
@@ -68,6 +72,32 @@ type Sheet = {
   cart: {
     addressLoginPrompt: string;
     addressBookPrompt: string;
+    addSuccess: string;
+    removeConfirmTitle: string;
+    removeConfirmBody: string;
+    removeSuccess: string;
+  };
+  checkout: {
+    successTitle: string;
+    successMessage: string;
+    orderId: string;
+    nextSteps: string;
+    step1Title: string;
+    step1Desc: string;
+    step2Title: string;
+    step2Desc: string;
+    step3Title: string;
+    step3Desc: string;
+    viewOrder: string;
+    continueShopping: string;
+    failureTitle: string;
+    failureMessage: string;
+    troubleshoot: string;
+    troubleshoot1: string;
+    troubleshoot2: string;
+    troubleshoot3: string;
+    retryCheckout: string;
+    backToCart: string;
   };
   account: {
     screenTitle: string;
@@ -99,6 +129,8 @@ const VI: Sheet = {
   common: {
     ok: 'OK',
     cancel: 'Hủy',
+    delete: 'Xoá',
+    success: 'Thành công',
     retry: 'Thử lại',
     login: 'Đăng nhập',
     error: 'Lỗi',
@@ -136,6 +168,8 @@ const VI: Sheet = {
     logoutFailedBody: 'Không gọi được máy chủ; phiên trên máy vẫn đã được xóa.',
     signupSuccessTitle: 'Đăng ký thành công',
     signupSuccessBody: 'Tài khoản đã được tạo. Bạn đã được đăng nhập.',
+    checkoutConfirmTitle: 'Xác nhận đơn hàng',
+    checkoutConfirmPlace: 'Đặt hàng',
   },
   empty: {
     cartTitle: 'Giỏ hàng của bạn đang trống.',
@@ -163,6 +197,32 @@ const VI: Sheet = {
   cart: {
     addressLoginPrompt: 'Đăng nhập để tải địa chỉ.',
     addressBookPrompt: 'Thêm địa chỉ — Sổ địa chỉ hoặc thanh toán.',
+    addSuccess: 'Thêm vào giỏ thành công',
+    removeConfirmTitle: 'Xoá sản phẩm?',
+    removeConfirmBody: 'Bạn có chắc chắn muốn xoá sản phẩm này khỏi giỏ hàng?',
+    removeSuccess: 'Đã xoá khỏi giỏ hàng',
+  },
+  checkout: {
+    successTitle: 'Đơn hàng đã được tạo!',
+    successMessage: 'Cảm ơn bạn. Chúng tôi sẽ xử lý đơn hàng của bạn sớm.',
+    orderId: 'Mã đơn hàng',
+    nextSteps: 'Các bước tiếp theo',
+    step1Title: 'Đơn hàng xác nhận',
+    step1Desc: 'Chúng tôi đang chuẩn bị đơn hàng của bạn.',
+    step2Title: 'Đang giao',
+    step2Desc: 'Chúng tôi sẽ thông báo khi đơn hàng được gửi đi.',
+    step3Title: 'Đã giao',
+    step3Desc: 'Theo dõi đơn hàng của bạn bất cứ lúc nào.',
+    viewOrder: 'Xem chi tiết đơn hàng',
+    continueShopping: 'Tiếp tục mua sắm',
+    failureTitle: 'Đơn hàng thất bại',
+    failureMessage: 'Có lỗi khi xử lý đơn hàng của bạn. Vui lòng thử lại.',
+    troubleshoot: 'Hướng dẫn khắc phục',
+    troubleshoot1: 'Kiểm tra lại thông tin thanh toán của bạn',
+    troubleshoot2: 'Đảm bảo tài khoản có đủ tiền',
+    troubleshoot3: 'Liên hệ hỗ trợ nếu vấn đề vẫn tiếp diễn',
+    retryCheckout: 'Thử lại',
+    backToCart: 'Quay lại giỏ hàng',
   },
   account: {
     screenTitle: 'Tài khoản',
@@ -197,8 +257,8 @@ const VI: Sheet = {
 const EN: Sheet = {
   common: {
     ok: 'OK',
-    cancel: 'Cancel',
-    retry: 'Retry',
+    cancel: 'Cancel',    delete: 'Delete',
+    success: 'Success',    retry: 'Retry',
     login: 'Log in',
     error: 'Error',
     loading: 'Loading…',
@@ -235,6 +295,8 @@ const EN: Sheet = {
     logoutFailedBody: 'Server request failed; local session was still cleared.',
     signupSuccessTitle: 'Welcome!',
     signupSuccessBody: 'Your account was created and you are signed in.',
+    checkoutConfirmTitle: 'Confirm order',
+    checkoutConfirmPlace: 'Place order',
   },
   empty: {
     cartTitle: 'Your cart is empty.',
@@ -262,6 +324,32 @@ const EN: Sheet = {
   cart: {
     addressLoginPrompt: 'Sign in to load your addresses.',
     addressBookPrompt: 'Add an address — Address book or checkout.',
+    addSuccess: 'Added to cart',
+    removeConfirmTitle: 'Remove item?',
+    removeConfirmBody: 'Are you sure you want to remove this item from your cart?',
+    removeSuccess: 'Removed from cart',
+  },
+  checkout: {
+    successTitle: 'Order Placed!',
+    successMessage: 'Thank you. We will process your order soon.',
+    orderId: 'Order ID',
+    nextSteps: 'What Happens Next',
+    step1Title: 'Order Confirmed',
+    step1Desc: 'We are preparing your order.',
+    step2Title: 'Shipped',
+    step2Desc: 'We will notify you when it ships.',
+    step3Title: 'Delivered',
+    step3Desc: 'Track your order at any time.',
+    viewOrder: 'View Order Details',
+    continueShopping: 'Continue Shopping',
+    failureTitle: 'Order Failed',
+    failureMessage: 'There was an error processing your order. Please try again.',
+    troubleshoot: 'Troubleshooting',
+    troubleshoot1: 'Check your payment details and try again',
+    troubleshoot2: 'Ensure sufficient funds are available',
+    troubleshoot3: 'Contact support if the issue persists',
+    retryCheckout: 'Try Again',
+    backToCart: 'Back to Cart',
   },
   account: {
     screenTitle: 'Account',
