@@ -1,17 +1,18 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, TextInput, View, Pressable } from 'react-native';
+import { Text, TextInput, View, Pressable } from 'react-native';
+import { useToast } from '~/components/ToastProvider';
 
 export default function EditProfileScreen() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [name, setName] = useState('Võ Tấn Đức');
   const [bio, setBio] = useState('');
   const [avatar, setAvatar] = useState('');
 
   function save() {
-    // For now just show a confirmation and go back
-    Alert.alert('Saved', 'Profile updated (mock)');
-    router.back();
+    addToast('success', 'Saved', 'Profile updated');
+    setTimeout(() => router.back(), 1200);
   }
 
   return (

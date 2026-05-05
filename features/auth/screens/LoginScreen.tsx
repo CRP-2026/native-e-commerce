@@ -3,14 +3,37 @@ import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
+import { login } from '~/lib/api/auth';
+import { afterAuthLogin } from '~/lib/auth/session';
+import { getAppLocale, resolveLoginError, strings } from '~/lib/i18n';
+import { useToast } from '~/components/ToastProvider';
+
 export default function LoginScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
+  const { addToast } = useToast();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleLogin = () => {
-    console.log('Login:', { email, password });
+  const handleLogin = async () => {
+    if (!email.trim() || !password) {
+      addToast('warning', L.errors.missingFields, L.errors.enterEmailPassword);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await login(email.trim(), password);
+      await afterAuthLogin(res.access_token);
+      router.replace('/(tabs)');
+    } catch (e) {
+      addToast('error', L.errors.loginFailed, resolveLoginError(e, locale));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -34,6 +57,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
               placeholderTextColor="#676767"
             />
           </View>
@@ -69,8 +93,9 @@ export default function LoginScreen() {
         </View>
 
         <TouchableOpacity
-          className="mt-9 h-[55px] items-center justify-center rounded bg-[#F83758]"
-          onPress={handleLogin}>
+          className={`mt-9 h-[55px] items-center justify-center rounded bg-[#F83758] ${submitting ? 'opacity-60' : ''}`}
+          onPress={handleLogin}
+          disabled={submitting}>
           <Text className="text-[24px] font-semibold text-white">Login</Text>
         </TouchableOpacity>
 

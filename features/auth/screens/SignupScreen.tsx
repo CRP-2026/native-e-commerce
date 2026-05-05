@@ -3,16 +3,52 @@ import { View, Text, TouchableOpacity, TextInput, ScrollView } from 'react-nativ
 import { useRouter } from 'expo-router';
 import { FontAwesome, FontAwesome5, Ionicons } from '@expo/vector-icons';
 
+import { register } from '~/lib/api/auth';
+import { afterAuthLogin } from '~/lib/auth/session';
+import { getAppLocale, resolveSignupError, strings } from '~/lib/i18n';
+import { useToast } from '~/components/ToastProvider';
+
 export default function SignupScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
   const router = useRouter();
+  const { addToast } = useToast();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSignup = () => {
-    console.log('Sign Up:', { email, password, confirmPassword });
+  const handleSignup = async () => {
+    if (!name.trim()) {
+      addToast('warning', L.errors.missingFields, L.errors.signupMissingName);
+      return;
+    }
+    if (!email.trim()) {
+      addToast('warning', L.errors.missingFields, L.errors.signupMissingEmail);
+      return;
+    }
+    if (password.length < 6) {
+      addToast('warning', L.errors.missingFields, L.errors.signupBadPassword);
+      return;
+    }
+    if (password !== confirmPassword) {
+      addToast('warning', L.errors.missingFields, L.errors.signupPasswordMismatch);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await register(name.trim(), email.trim(), password);
+      await afterAuthLogin(res.access_token);
+      addToast('success', L.errors.signupSuccessTitle, L.errors.signupSuccessBody);
+      setTimeout(() => router.replace('/(tabs)'), 1500);
+    } catch (e) {
+      addToast('error', L.errors.signupFailed, resolveSignupError(e, locale));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -32,10 +68,27 @@ export default function SignupScreen() {
             />
             <TextInput
               className="flex-1 text-xs font-medium text-[#676767]"
-              placeholder="Username or Email"
+              placeholder="Full name"
+              value={name}
+              onChangeText={setName}
+              placeholderTextColor="#676767"
+            />
+          </View>
+
+          <View className="h-[55px] flex-row items-center rounded-[10px] border border-[#A8A8A9] bg-[#F3F3F3] px-3">
+            <FontAwesome
+              name="envelope"
+              size={16}
+              color="#676767"
+              style={{ marginRight: 10, width: 20, textAlign: 'center' }}
+            />
+            <TextInput
+              className="flex-1 text-xs font-medium text-[#676767]"
+              placeholder="Email"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              autoCapitalize="none"
               placeholderTextColor="#676767"
             />
           </View>
@@ -73,7 +126,7 @@ export default function SignupScreen() {
             />
             <TextInput
               className="flex-1 text-xs font-medium text-[#676767]"
-              placeholder="ConfirmPassword"
+              placeholder="Confirm password"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showConfirmPassword}
@@ -95,8 +148,9 @@ export default function SignupScreen() {
         </Text>
 
         <TouchableOpacity
-          className="mt-7 h-[55px] items-center justify-center rounded bg-[#F83758]"
-          onPress={handleSignup}>
+          className={`mt-7 h-[55px] items-center justify-center rounded bg-[#F83758] ${submitting ? 'opacity-60' : ''}`}
+          onPress={handleSignup}
+          disabled={submitting}>
           <Text className="text-[20px] font-semibold text-white">Create Account</Text>
         </TouchableOpacity>
 

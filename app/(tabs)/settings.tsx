@@ -1,6 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
-import { View, Text, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { resetOnboardingSeen } from '~/lib/onboardingStorage';
+import { useToast } from '~/components/ToastProvider';
 
 type TestRouteItem = {
   label: string;
@@ -33,17 +34,18 @@ const FLOW_ROUTES: TestRouteItem[] = [
 
 const DETAIL_ROUTES: TestRouteItem[] = [
   { label: 'Product Detail (sample)', path: '/product/jewelry-set-01' },
-  { label: 'Order Detail (sample)', path: '/order/ORD-1001' },
+  { label: 'Orders list', path: '/(tabs)/order' },
   { label: 'Edit Profile', path: '/account/edit' },
   { label: 'Addresses', path: '/addresses' },
 ];
 
 export default function Settings() {
   const router = useRouter();
+  const { addToast } = useToast();
 
   const handleResetOnboarding = async () => {
     await resetOnboardingSeen();
-    Alert.alert('Done', 'Onboarding has been reset. Reopen app to see it again.');
+    addToast('success', 'Done', 'Onboarding has been reset. Reopen app to see it again.');
     console.log('Onboarding has been reset. Reopen app to see it again.');
   };
 

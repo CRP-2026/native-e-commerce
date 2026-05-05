@@ -1,45 +1,86 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useToast } from '~/components/ToastProvider';
 
 import { Button } from '~/components/Button';
 import { useCart } from '~/features/cart/hooks/useCart';
-import {
-  getDefaultVariant,
-  getProductById,
-  getProductVariant,
-} from '~/features/product/services/productData';
+import { fetchProductById } from '~/lib/api/catalog';
+import { ApiError } from '~/lib/api/errors';
+import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
+import type { ProductDetail } from '~/lib/types/products';
+import type { Product } from '~/lib/types/models';
+import { getDefaultVariant, getVariantById } from '~/lib/utils/productHelpers';
 import { formatCurrency } from '~/lib/utils/formatters';
 
 export default function ProductDetailScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
   const { addToCart } = useCart();
+  const { addToast } = useToast();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const resolvedProductId = Array.isArray(params.id) ? params.id[0] : params.id;
   const productId = resolvedProductId ?? '';
-  const product = getProductById(productId);
+
+  const [product, setProduct] = useState<ProductDetail | null>(null);
+  const [loading, setLoading] = useState(Boolean(productId));
+  const [loadError, setLoadError] = useState<string | null>(null);
+
   const [selectedVariantId, setSelectedVariantId] = useState('');
   const [quantity, setQuantity] = useState(1);
 
+  const load = useCallback(async () => {
+    if (!productId) {
+      setProduct(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const p = await fetchProductById(productId);
+      setProduct(p);
+      const def = getDefaultVariant(p);
+      setSelectedVariantId(def.id);
+      setQuantity(1);
+    } catch (e) {
+      const msg = e instanceof ApiError ? resolveApiError(e, locale) : L.errors.productLoadFailed;
+      setLoadError(msg);
+      setProduct(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [productId, locale, L.errors.productLoadFailed]);
+
   useEffect(() => {
-    if (!product) return;
-    setSelectedVariantId(getDefaultVariant(product).id);
-    setQuantity(1);
-  }, [product?.id]);
+    void load();
+  }, [load]);
 
   const selectedVariant = useMemo(() => {
     if (!product) return undefined;
-    return getProductVariant(product, selectedVariantId) ?? getDefaultVariant(product);
+    return getVariantById(product, selectedVariantId) ?? getDefaultVariant(product);
   }, [product, selectedVariantId]);
 
-  if (!product) {
+  if (loading) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Product Details' }} />
+        <View className="flex-1 items-center justify-center bg-white">
+          <ActivityIndicator size="large" color="#F83758" />
+        </View>
+      </>
+    );
+  }
+
+  if (loadError || !product) {
     return (
       <>
         <Stack.Screen options={{ title: 'Product Details' }} />
         <View className="flex-1 items-center justify-center bg-white px-6">
           <Text className="text-[18px] font-semibold text-[#232327]">Product not found</Text>
           <Text className="mt-2 text-center text-[14px] text-[#6A6A6A]">
-            The product you are looking for does not exist.
+            {loadError ?? 'The product you are looking for does not exist.'}
           </Text>
         </View>
       </>
@@ -52,7 +93,13 @@ export default function ProductDetailScreen() {
 
   const handleAddToCart = () => {
     if (!selectedVariant) return;
-    addToCart(product, quantity);
+    const snapshot: Product = {
+      ...product,
+      price: selectedVariant.price,
+      image: selectedVariant.image ?? product.image,
+    };
+    addToCart(snapshot, quantity, selectedVariant.id);
+    addToast('success', L.common.success, L.cart.addSuccess);
   };
 
   return (
