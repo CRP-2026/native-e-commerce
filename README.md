@@ -43,8 +43,10 @@ EXPO_PUBLIC_STORE_ID=1
   - Product detail gọi `fetchProductById()`
 - Auth:
   - Login/Signup gọi API thật
+  - Logout gọi API thật (`POST /auth/logout`) + clear token local
   - Token lưu AsyncStorage
   - `hydrateSession()` khởi động backend địa chỉ HTTP nếu có token
+  - Account screen bind `GET /users/me` (name/email/phone/bio/role/is_active)
 - Addresses:
   - `AddressLoad` hỗ trợ swap backend
   - Sau login dùng HTTP backend (`createHttpAddressBackend`)
@@ -91,14 +93,15 @@ EXPO_PUBLIC_STORE_ID=1
 
 ## Remaining TODO (short)
 
-- Thêm logout thực tế trong màn Account (gọi `logoutSession()`).
-- Đồng bộ profile UI với `GET /users/me`.
-- Bổ sung test e2e/smoke cho flow login -> address -> checkout.
+- Bổ sung test e2e đầy đủ cho flow login -> address CRUD -> checkout -> orders.
+- Mở rộng i18n cho toàn bộ copy UI còn lại.
+- Chuẩn hóa migration strategy (manual SQL vs Alembic) theo team decision.
 
 ## Quick Checks
 
 ```bash
 npx tsc --noEmit
 npm run lint
+npm run smoke:api
 ```
 

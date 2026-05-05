@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react';
 import { Alert, Text, TextInput, View, Pressable } from 'react-native';
 import addressStorage from '~/features/account/services/addressStorage';
 import { ApiError } from '~/lib/api/errors';
+import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
 
 export default function AddressFormScreen() {
+  const locale = getAppLocale();
+  const L = strings(locale);
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const rawId = params.id;
@@ -29,7 +32,8 @@ export default function AddressFormScreen() {
   }, [id]);
 
   async function save() {
-    if (!name || !phone || !address) return Alert.alert('Missing', 'Please fill required fields');
+    if (!name || !phone || !address)
+      return Alert.alert(L.errors.addressMissingTitle, L.errors.addressMissingBody);
     try {
       if (id) {
         await addressStorage.saveAddress({ id, name, phone, address, city, isDefault: false });
@@ -38,8 +42,8 @@ export default function AddressFormScreen() {
       }
       router.replace('/addresses');
     } catch (e) {
-      const msg = e instanceof ApiError ? e.message : 'Could not save address.';
-      Alert.alert('Error', msg);
+      const msg = e instanceof ApiError ? resolveApiError(e, locale) : L.errors.addressSaveFailed;
+      Alert.alert(L.common.error, msg);
     }
   }
 
