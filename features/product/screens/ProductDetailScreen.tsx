@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { useToast } from '~/components/ToastProvider';
 
 import { Button } from '~/components/Button';
 import { useCart } from '~/features/cart/hooks/useCart';
@@ -17,6 +18,7 @@ export default function ProductDetailScreen() {
   const locale = getAppLocale();
   const L = strings(locale);
   const { addToCart } = useCart();
+  const { addToast } = useToast();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const resolvedProductId = Array.isArray(params.id) ? params.id[0] : params.id;
   const productId = resolvedProductId ?? '';
@@ -97,6 +99,7 @@ export default function ProductDetailScreen() {
       image: selectedVariant.image ?? product.image,
     };
     addToCart(snapshot, quantity, selectedVariant.id);
+    addToast('success', L.common.success, L.cart.addSuccess);
   };
 
   return (

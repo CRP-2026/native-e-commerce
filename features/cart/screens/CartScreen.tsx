@@ -1,12 +1,13 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '~/components/Button';
+import { useToast } from '~/components/ToastProvider';
 import { useCart } from '~/features/cart/hooks/useCart';
 import { getAddresses } from '~/features/account/services/addressStorage';
+import { getAccessToken } from '~/lib/api/token';
 import type { CartItem } from '~/lib/store/cartStore';
 import { formatCurrency } from '~/lib/utils/formatters';
 import { getAppLocale, strings } from '~/lib/i18n';
@@ -16,7 +17,37 @@ export default function CartScreen() {
   const locale = getAppLocale();
   const L = strings(locale);
   const { items, updateQuantity, removeFromCart } = useCart();
+  const { addToast } = useToast();
   const [addressPreview, setAddressPreview] = useState('');
+  const [pendingDelete, setPendingDelete] = useState<{
+    productId: string;
+    variantId: string | null;
+    productName: string;
+  } | null>(null);
+
+  const handleRemoveItem = (productId: string, variantId: string | null, productName: string) => {
+    setPendingDelete({ productId, variantId, productName });
+  };
+
+  const confirmDeleteItem = () => {
+    if (!pendingDelete) return;
+    removeFromCart(pendingDelete.productId, pendingDelete.variantId);
+    addToast('success', L.common.success, `${pendingDelete.productName}: ${L.cart.removeSuccess}`);
+    setPendingDelete(null);
+  };
+
+  const handleCheckoutPress = useCallback(async () => {
+    const token = await getAccessToken();
+    if (!token) {
+      Alert.alert(L.errors.checkoutNeedLoginTitle, L.errors.checkoutNeedLoginBody, [
+        { text: L.common.cancel, style: 'cancel' },
+        { text: L.common.login, onPress: () => router.push('/(auth)/login') },
+      ]);
+      return;
+    }
+
+    router.push('/checkout');
+  }, [L, router]);
 
   const refreshPreview = useCallback(async () => {
     const S = strings(locale);
@@ -87,13 +118,19 @@ export default function CartScreen() {
             <View className="mt-4 gap-4">
               {items.length === 0 ? (
                 <View className="rounded-[20px] bg-white p-6 shadow-sm">
-                  <Text className="text-center text-[14px] text-[#7A7A7A]">{L.empty.cartTitle}</Text>
-                  <Text className="mt-2 text-center text-[13px] text-[#9CA3AF]">{L.empty.cartHint}</Text>
+                  <Text className="text-center text-[14px] text-[#7A7A7A]">
+                    {L.empty.cartTitle}
+                  </Text>
+                  <Text className="mt-2 text-center text-[13px] text-[#9CA3AF]">
+                    {L.empty.cartHint}
+                  </Text>
                   <View className="mt-4 items-center">
                     <Pressable
                       className="rounded-full bg-[#F97316] px-5 py-2.5"
                       onPress={() => router.push('/(tabs)')}>
-                      <Text className="text-[13px] font-semibold text-white">{L.empty.cartContinue}</Text>
+                      <Text className="text-[13px] font-semibold text-white">
+                        {L.empty.cartContinue}
+                      </Text>
                     </Pressable>
                   </View>
                 </View>
@@ -103,7 +140,7 @@ export default function CartScreen() {
                     key={`${it.product.id}::${it.variantId ?? ''}`}
                     item={it}
                     onChange={updateQuantity}
-                    onRemove={removeFromCart}
+                    onRemove={(pid, vid) => handleRemoveItem(pid, vid, it.product.name)}
                   />
                 ))
               )}
@@ -132,11 +169,37 @@ export default function CartScreen() {
               <SummaryRow label="Total" value={formatCurrency(total)} total />
 
               <View className="mt-4">
-                <Button title="Checkout" onPress={() => router.push('/checkout')} />
+                <Button title="Checkout" onPress={handleCheckoutPress} />
               </View>
             </View>
           </View>
         </ScrollView>
+
+        {pendingDelete ? (
+          <View className="absolute inset-0 z-50 items-center justify-center bg-black/35 px-6">
+            <View className="w-full max-w-[420px] border border-[#FFE4D6] bg-white p-5 shadow-xl">
+              <Text className="text-[19px] font-bold text-[#1F2937]">{L.cart.removeConfirmTitle}</Text>
+              <Text className="mt-2 text-[14px] leading-[21px] text-[#6B7280]">
+                {L.cart.removeConfirmBody}
+              </Text>
+              <Text className="mt-2 text-[13px] font-medium text-[#9CA3AF]">
+                {pendingDelete.productName}
+              </Text>
+              <View className="mt-5 flex-row gap-3">
+                <Pressable
+                  onPress={() => setPendingDelete(null)}
+                  className="flex-1 items-center rounded-[18px] border border-[#FED7AA]  py-3">
+                  <Text className="text-[14px] font-semibold text-[#9A3412]">{L.common.cancel}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={confirmDeleteItem}
+                  className="flex-1 items-center rounded-[18px] border border-[#FECACA] bg-[#FEF2F2] py-3">
+                  <Text className="text-[14px] font-semibold text-[#B91C1C]">{L.common.delete}</Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
       </View>
     </>
   );
@@ -202,9 +265,7 @@ function CartItemCard({
             <View className="flex-row items-center rounded-full bg-[#FFF4ED] p-1">
               <QuantityButton
                 label="-"
-                onPress={() =>
-                  onChange(item.product.id, vid, Math.max(0, item.quantity - 1))
-                }
+                onPress={() => onChange(item.product.id, vid, Math.max(0, item.quantity - 1))}
               />
               <Text className="min-w-[34px] text-center text-[14px] font-semibold text-[#1F1F1F]">
                 {item.quantity}

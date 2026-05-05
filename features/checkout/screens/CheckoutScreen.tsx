@@ -1,10 +1,10 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '~/components/Button';
+import { useToast } from '~/components/ToastProvider';
 import { useCart } from '~/features/cart/hooks/useCart';
 import { getAddresses } from '~/features/account/services/addressStorage';
 import { getAccessToken } from '~/lib/api/token';
@@ -42,12 +42,14 @@ export default function CheckoutScreen() {
   const locale = getAppLocale();
   const L = strings(locale);
   const { items, clearCart } = useCart();
+  const { addToast } = useToast();
   const [shippingAddresses, setShippingAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState(
     paymentMethods[0]?.id ?? ''
   );
   const [placing, setPlacing] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const refreshAddresses = useCallback(async () => {
     try {
@@ -88,7 +90,7 @@ export default function CheckoutScreen() {
     [selectedPaymentMethodId]
   );
 
-  const handlePlaceOrder = async () => {
+  const handleCheckoutConfirm = async () => {
     const token = await getAccessToken();
     if (!token) {
       Alert.alert(L.errors.checkoutNeedLoginTitle, L.errors.checkoutNeedLoginBody, [
@@ -105,6 +107,15 @@ export default function CheckoutScreen() {
     }
     if (!items.length) return;
 
+    setShowConfirm(true);
+  };
+
+  const handleConfirmPlaceOrder = () => {
+    setShowConfirm(false);
+    void handlePlaceOrder();
+  };
+
+  const handlePlaceOrder = async () => {
     setPlacing(true);
     try {
       const created = await placeOrder({
@@ -113,16 +124,18 @@ export default function CheckoutScreen() {
           variantId: variantIdForOrderApi(it.product.id, it.variantId),
           quantity: it.quantity,
         })),
-        shippingAddressId: selectedAddress.id,
+        shippingAddressId: selectedAddress!.id,
         paymentMethod: selectedPaymentMethodId,
         shippingFee: shipping,
         discountTotal: discount,
       });
       clearCart();
-      router.replace(`/order/${encodeURIComponent(created.id)}`);
+      addToast('success', L.checkout.successTitle, L.checkout.successMessage);
+      router.replace(`/checkout-success?orderId=${encodeURIComponent(created.id)}`);
     } catch (e) {
       const msg = resolveApiError(e, locale);
-      Alert.alert(L.errors.orderFailed, msg);
+      addToast('error', L.common.error, msg);
+      router.replace(`/checkout-failure?error=${encodeURIComponent(msg)}`);
     } finally {
       setPlacing(false);
     }
@@ -330,7 +343,7 @@ export default function CheckoutScreen() {
                 <View className="mt-5">
                   <Button
                     title={placing ? 'Placing…' : 'Place Order'}
-                    onPress={handlePlaceOrder}
+                    onPress={handleCheckoutConfirm}
                     disabled={placing}
                   />
                 </View>
@@ -338,6 +351,35 @@ export default function CheckoutScreen() {
             )}
           </View>
         </ScrollView>
+
+        {showConfirm ? (
+          <View className="absolute inset-0 z-50 items-center justify-center bg-black/40 px-5">
+            <View className="w-full max-w-[420px] rounded-[28px] bg-white p-5 shadow-xl">
+              <Text className="text-[18px] font-semibold text-[#111827]">
+                {L.errors.checkoutConfirmTitle}
+              </Text>
+              <Text className="mt-2 text-[14px] leading-[22px] text-[#6B7280]">
+                Total: {formatCurrency(total)}. Are you sure?
+              </Text>
+
+              <View className="mt-5 flex-row gap-3">
+                <Pressable
+                  className="flex-1 items-center rounded-[20px] border border-[#E5E7EB] bg-white px-4 py-3"
+                  onPress={() => setShowConfirm(false)}>
+                  <Text className="font-semibold text-[#111827]">{L.common.cancel}</Text>
+                </Pressable>
+                <Pressable
+                  className="flex-1 items-center rounded-[20px] bg-[#F97316] px-4 py-3"
+                  disabled={placing}
+                  onPress={handleConfirmPlaceOrder}>
+                  <Text className="font-semibold text-white">
+                    {placing ? 'Placing…' : L.errors.checkoutConfirmPlace}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        ) : null}
       </View>
     </>
   );
