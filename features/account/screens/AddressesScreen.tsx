@@ -1,6 +1,5 @@
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useEffect, useState, useCallback } from 'react';
-import { useFocusEffect } from '@react-navigation/native';
 import { Alert, FlatList, Pressable, Text, View } from 'react-native';
 import addressStorage from '~/features/account/services/addressStorage';
 import { Address } from '@/lib/types/models';

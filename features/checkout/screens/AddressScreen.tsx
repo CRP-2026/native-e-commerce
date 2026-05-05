@@ -1,15 +1,16 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect } from '@react-navigation/native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 import { Button } from '~/components/Button';
 import { getAddresses } from '~/features/account/services/addressStorage';
 import type { Address } from '~/lib/types/models';
+import { useToast } from '~/components/ToastProvider';
 
 export default function AddressScreen() {
   const router = useRouter();
+  const { addToast } = useToast();
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
 
@@ -23,10 +24,10 @@ export default function AddressScreen() {
         return def?.id ?? '';
       });
     } catch {
-      Alert.alert('Addresses', 'Không tải được địa chỉ — kiểm tra đăng nhập và API.');
+      addToast('error', 'Address Error', 'Không tải được địa chỉ — kiểm tra đăng nhập và API.');
       setAddresses([]);
     }
-  }, []);
+  }, [addToast]);
 
   useFocusEffect(
     useCallback(() => {
@@ -112,7 +113,9 @@ export default function AddressScreen() {
 
                         <View
                           className={`mt-1 h-5 w-5 rounded-full border-2 ${
-                            isSelected ? 'border-[#F97316] bg-[#F97316]' : 'border-[#D1D5DB] bg-white'
+                            isSelected
+                              ? 'border-[#F97316] bg-[#F97316]'
+                              : 'border-[#D1D5DB] bg-white'
                           }`}>
                           {isSelected ? (
                             <View className="m-[3px] h-1.5 w-1.5 rounded-full bg-white" />

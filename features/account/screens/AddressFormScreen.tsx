@@ -1,14 +1,16 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Text, TextInput, View, Pressable } from 'react-native';
+import { Text, TextInput, View, Pressable } from 'react-native';
 import addressStorage from '~/features/account/services/addressStorage';
 import { ApiError } from '~/lib/api/errors';
 import { getAppLocale, resolveApiError, strings } from '~/lib/i18n';
+import { useToast } from '~/components/ToastProvider';
 
 export default function AddressFormScreen() {
   const locale = getAppLocale();
   const L = strings(locale);
   const router = useRouter();
+  const { addToast } = useToast();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const rawId = params.id;
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -32,18 +34,21 @@ export default function AddressFormScreen() {
   }, [id]);
 
   async function save() {
-    if (!name || !phone || !address)
-      return Alert.alert(L.errors.addressMissingTitle, L.errors.addressMissingBody);
+    if (!name || !phone || !address) {
+      addToast('warning', L.errors.addressMissingTitle, L.errors.addressMissingBody);
+      return;
+    }
     try {
       if (id) {
         await addressStorage.saveAddress({ id, name, phone, address, city, isDefault: false });
       } else {
         await addressStorage.createAddressPartial({ name, phone, address, city, isDefault: false });
       }
-      router.replace('/addresses');
+      addToast('success', L.common.success, 'Address saved');
+      setTimeout(() => router.replace('/addresses'), 1200);
     } catch (e) {
       const msg = e instanceof ApiError ? resolveApiError(e, locale) : L.errors.addressSaveFailed;
-      Alert.alert(L.common.error, msg);
+      addToast('error', L.common.error, msg);
     }
   }
 
